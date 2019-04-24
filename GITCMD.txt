@@ -1,0 +1,349 @@
+MINGW64:/c/Users/DHEERAJ MISHRA/Desktop/Git
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~ (master)
+$ pwd
+/c/Users/DHEERAJ MISHRA
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~ (master)
+$ ls
+'3D Objects'/                   Downloads/               NetHood@                                                                                       Pictures/             SoapUI-Tutorials/
+ AppData/                       Favorites/               NTUSER.DAT                                                                                     PrintHood@            source/
+'Application Data'@             IntelGraphicsProfiles/   ntuser.dat.LOG1                                                                                README.md            'Start Menu'@
+ Contacts/                      Links/                   ntuser.dat.LOG2                                                                                Recent@               Templates@
+ Cookies@                      'Local Settings'@         NTUSER.DAT{63b2c2f4-d915-11e8-a872-005056c00008}.TM.blf                                       'Saved Games'/         Tracing/
+ default-soapui-workspace.xml   MicrosoftEdgeBackups/    NTUSER.DAT{63b2c2f4-d915-11e8-a872-005056c00008}.TMContainer00000000000000000001.regtrans-ms   Searches/             Videos/
+ Desktop/                       Music/                   NTUSER.DAT{63b2c2f4-d915-11e8-a872-005056c00008}.TMContainer00000000000000000002.regtrans-ms   SeleniumCode/        'VirtualBox VMs'/
+ Dheeraj_UFT/                  'My Documents'@           ntuser.ini                                                                                     SendTo@               workspace/
+ Documents/                     MY_UFT_project/          OneDrive/                                                                                      soapui-settings.xml
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~ (master)
+$ cd Desktop
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop (master)
+$ cd Git
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ ls
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git init
+Initialized empty Git repository in C:/Users/DHEERAJ MISHRA/Desktop/Git/.git/
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ pwd
+/c/Users/DHEERAJ MISHRA/Desktop/Git
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ ls
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ ls -la
+total 20
+drwxr-xr-x 1 DHEERAJ MISHRA 197609 0 Feb 19 21:47 ./
+drwxr-xr-x 1 DHEERAJ MISHRA 197609 0 Feb 19 21:34 ../
+drwxr-xr-x 1 DHEERAJ MISHRA 197609 0 Feb 19 21:47 .git/
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git add .
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git commit -m "this is my first project"
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: unable to auto-detect email address (got 'DHEERAJ MISHRA@DESKTOP-7T7SG9U.(none)')
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ dheerajfb27
+bash: dheerajfb27: command not found
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ dheerajfb27@gmail.com
+bash: dheerajfb27@gmail.com: command not found
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git config --global user.name dheerajfb27
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git commit -m "this is my first project"
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: unable to auto-detect email address (got 'DHEERAJ MISHRA@DESKTOP-7T7SG9U.(none)')
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git config --global user.email "dheerajfb27@gmail.com"
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ omit
+bash: omit: command not found
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git commit -m "this is my first project"
+[master (root-commit) 860517c] this is my first project
+ 1 file changed, 1 insertion(+)
+ create mode 100644 test.txt
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ pwd
+/c/Users/DHEERAJ MISHRA/Desktop/Git
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git log
+commit 860517c3ea50414454a6e0d793d68861f3906278 (HEAD -> master)
+Author: dheerajfb27 <dheerajfb27@gmail.com>
+Date:   Tue Feb 19 22:00:16 2019 +0530
+
+    this is my first project
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+nothing to commit, working tree clean
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        test01.txt
+        test02.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git add test01.txt
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        new file:   test01.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        test02.txt
+
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git commit -m "adding secod file"
+[master d1bc88b] adding secod file
+ 1 file changed, 1 insertion(+)
+ create mode 100644 test01.txt
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git log
+commit d1bc88b11d7603ce64438d4215f097c9f64a46ec (HEAD -> master)
+Author: dheerajfb27 <dheerajfb27@gmail.com>
+Date:   Wed Feb 20 00:36:03 2019 +0530
+
+    adding secod file
+
+commit 860517c3ea50414454a6e0d793d68861f3906278
+Author: dheerajfb27 <dheerajfb27@gmail.com>
+Date:   Tue Feb 19 22:00:16 2019 +0530
+
+    this is my first project
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git add test02.txt
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git commit -m "adding third file"
+[master a19c71d] adding third file
+ 1 file changed, 1 insertion(+)
+ create mode 100644 test02.txt
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git log
+commit a19c71d1fdc51e389b621b458e291643e5043dcb (HEAD -> master)
+Author: dheerajfb27 <dheerajfb27@gmail.com>
+Date:   Wed Feb 20 00:38:37 2019 +0530
+
+    adding third file
+
+commit d1bc88b11d7603ce64438d4215f097c9f64a46ec
+Author: dheerajfb27 <dheerajfb27@gmail.com>
+Date:   Wed Feb 20 00:36:03 2019 +0530
+
+    adding secod file
+
+commit 860517c3ea50414454a6e0d793d68861f3906278
+Author: dheerajfb27 <dheerajfb27@gmail.com>
+Date:   Tue Feb 19 22:00:16 2019 +0530
+
+    this is my first project
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   test.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git add test.txt
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        modified:   test.txt
+
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git commit -m "added changes to first file"
+[master e8ffd57] added changes to first file
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+nothing to commit, working tree clean
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   test01.txt
+        modified:   test02.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git add .
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        modified:   test01.txt
+        modified:   test02.txt
+
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git commit -m "final changes to file"
+[master 117abab] final changes to file
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+nothing to commit, working tree clean
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git diff
+diff --git a/test.txt b/test.txt
+index c8a5a5e..3312d11 100644
+--- a/test.txt
++++ b/test.txt
+@@ -1 +1,4 @@
+-i am dheeraj mishra new in git welcome to git
+\ No newline at end of file
++i am dheeraj mishra new in git welcome to git
++
++
++git chnges to my file
+\ No newline at end of file
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git add test.txt
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git commit -m "latest changes to test file"
+[master e206270] latest changes to test file
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git status
+On branch master
+nothing to commit, working tree clean
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git diff
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git init
+Reinitialized existing Git repository in C:/Users/DHEERAJ MISHRA/Desktop/Git/.git/
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git remote add githubrepo https://github.com/dheerajfb27/Myrepo.git
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git remote
+githubrepo
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$ git push -u githubrepo master
+
+
+
+
+
+
+
+Enumerating objects: 19, done.
+Counting objects: 100% (19/19), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (12/12), done.
+Writing objects: 100% (19/19), 1.65 KiB | 154.00 KiB/s, done.
+Total 19 (delta 1), reused 0 (delta 0)
+remote: Resolving deltas: 100% (1/1), done.
+To https://github.com/dheerajfb27/Myrepo.git
+ * [new branch]      master -> master
+Branch 'master' set up to track remote branch 'master' from 'githubrepo'.
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$
+
+DHEERAJ MISHRA@DESKTOP-7T7SG9U MINGW64 ~/Desktop/Git (master)
+$
