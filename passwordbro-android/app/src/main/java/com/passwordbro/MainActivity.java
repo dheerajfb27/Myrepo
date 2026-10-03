@@ -176,7 +176,94 @@ public class MainActivity extends Activity {
         dlg.show();
     }
 
-    private void chooseBackupLocation(){\n        if(currentPin==null){toast("Unlock the vault first");return;}\n        Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT); i.setType("application/octet-stream"); i.putExtra(Intent.EXTRA_TITLE,"PasswordBro-Backup.pbpro"); startActivityForResult(i,REQUEST_CREATE_BACKUP);\n    }\n\n    private void chooseBackupFile(){\n        Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT); i.setType("application/octet-stream"); i.addCategory(Intent.CATEGORY_OPENABLE); startActivityForResult(i,REQUEST_RESTORE_BACKUP);\n    }\n\n    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){\n        super.onActivityResult(requestCode,resultCode,data);\n        if(resultCode!=RESULT_OK || data==null || data.getData()==null)return;\n        try{ if(requestCode==REQUEST_CREATE_BACKUP) exportBackup(data.getData()); else if(requestCode==REQUEST_RESTORE_BACKUP) importBackup(data.getData()); }\n        catch(Exception e){toast("Backup operation failed");}\n    }\n\n    private void exportBackup(Uri uri) throws Exception{\n        byte[] salt=random(16); byte[] keyBytes=derive(currentPin,salt); byte[] iv=random(12);\n        Cipher c=Cipher.getInstance("AES/GCM/NoPadding"); c.init(Cipher.ENCRYPT_MODE,new SecretKeySpec(keyBytes,"AES"),new GCMParameterSpec(128,iv));\n        StringBuilder payload=new StringBuilder("PasswordBro|1\\n");\n        for(Entry e:entries) payload.append(b64(e.site.getBytes(StandardCharsets.UTF_8))).append(".").append(b64(e.user.getBytes(StandardCharsets.UTF_8))).append(".").append(b64(e.pass.getBytes(StandardCharsets.UTF_8))).append(".").append(b64(e.note.getBytes(StandardCharsets.UTF_8))).append("\\n");\n        byte[] ct=c.doFinal(payload.toString().getBytes(StandardCharsets.UTF_8));\n        String file="PBRO1\\n"+b64(salt)+"\\n"+b64(iv)+"\\n"+b64(ct)+"\\n";\n        try(java.io.OutputStream os=getContentResolver().openOutputStream(uri)){os.write(file.getBytes(StandardCharsets.UTF_8));}\n        toast("Encrypted backup created");\n    }\n\n    private void importBackup(Uri uri) throws Exception{\n        byte[] bytes; try(java.io.InputStream is=getContentResolver().openInputStream(uri)){java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();byte[] buf=new byte[8192];int n;while((n=is.read(buf))>0)out.write(buf,0,n);bytes=out.toByteArray();}\n        String[] parts=new String(bytes,StandardCharsets.UTF_8).split("\\n",-1);\n        if(parts.length<4 || !"PBRO1".equals(parts[0]))throw new SecurityException("Invalid backup");\n        final EditText pin=input("Backup PIN"); pin.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_VARIATION_PASSWORD); pin.setGravity(Gravity.CENTER);\n        new AlertDialog.Builder(this).setTitle("Restore PasswordBro Backup").setMessage("Enter the 6-digit PIN used when this backup was created.").setView(pin).setNegativeButton("Cancel",null).setPositiveButton("Restore",(d,w)->{\n            try{String p=pin.getText().toString(); if(p.length()!=6)throw new SecurityException("PIN"); byte[] kb=derive(p,Base64.getDecoder().decode(parts[1])); Cipher cc=Cipher.getInstance("AES/GCM/NoPadding");cc.init(Cipher.DECRYPT_MODE,new SecretKeySpec(kb,"AES"),new GCMParameterSpec(128,Base64.getDecoder().decode(parts[2])));String payload=new String(cc.doFinal(Base64.getDecoder().decode(parts[3])),StandardCharsets.UTF_8);\n                String[] lines=payload.split("\\n",-1); ArrayList<Entry> restored=new ArrayList<>(); for(int i=1;i<lines.length;i++){if(lines[i].isEmpty())continue;String[] x=lines[i].split("\\.",-1);if(x.length!=4)throw new SecurityException("Corrupt backup");restored.add(new Entry(new String(Base64.getDecoder().decode(x[0]),StandardCharsets.UTF_8),new String(Base64.getDecoder().decode(x[1]),StandardCharsets.UTF_8),new String(Base64.getDecoder().decode(x[2]),StandardCharsets.UTF_8),new String(Base64.getDecoder().decode(x[3]),StandardCharsets.UTF_8)));}\n                entries.clear();entries.addAll(restored);saveVault();render("");toast("Restored "+entries.size()+" passwords");\n            }catch(Exception e){toast("Restore failed: wrong PIN or damaged backup");}\n        }).show();\n    }\n\n    private void copyPassword(String p){
+    private void chooseBackupLocation(){
+        if(currentPin==null){toast("Unlock the vault first");return;}
+        Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        i.setType("application/octet-stream");
+        i.putExtra(Intent.EXTRA_TITLE,"PasswordBro-Backup.pbpro");
+        startActivityForResult(i,REQUEST_CREATE_BACKUP);
+    }
+
+    private void chooseBackupFile(){
+        Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.setType("application/octet-stream");
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(i,REQUEST_RESTORE_BACKUP);
+    }
+
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
+        super.onActivityResult(requestCode,resultCode,data);
+        if(resultCode!=RESULT_OK || data==null || data.getData()==null)return;
+        try{
+            if(requestCode==REQUEST_CREATE_BACKUP) exportBackup(data.getData());
+            else if(requestCode==REQUEST_RESTORE_BACKUP) importBackup(data.getData());
+        }catch(Exception e){toast("Backup operation failed");}
+    }
+
+    private void exportBackup(Uri uri) throws Exception{
+        byte[] salt=random(16); byte[] keyBytes=derive(currentPin,salt); byte[] iv=random(12);
+        Cipher c=Cipher.getInstance("AES/GCM/NoPadding");
+        c.init(Cipher.ENCRYPT_MODE,new SecretKeySpec(keyBytes,"AES"),new GCMParameterSpec(128,iv));
+        StringBuilder payload=new StringBuilder("PasswordBro|1\n");
+        for(Entry e:entries){
+            payload.append(b64(e.site.getBytes(StandardCharsets.UTF_8))).append(".")
+                .append(b64(e.user.getBytes(StandardCharsets.UTF_8))).append(".")
+                .append(b64(e.pass.getBytes(StandardCharsets.UTF_8))).append(".")
+                .append(b64(e.note.getBytes(StandardCharsets.UTF_8))).append("\n");
+        }
+        byte[] ct=c.doFinal(payload.toString().getBytes(StandardCharsets.UTF_8));
+        String file="PBRO1\n"+b64(salt)+"\n"+b64(iv)+"\n"+b64(ct)+"\n";
+        try(java.io.OutputStream os=getContentResolver().openOutputStream(uri)){
+            os.write(file.getBytes(StandardCharsets.UTF_8));
+        }
+        toast("Encrypted backup created");
+    }
+
+    private void importBackup(Uri uri) throws Exception{
+        byte[] bytes;
+        try(java.io.InputStream is=getContentResolver().openInputStream(uri)){
+            java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();
+            byte[] buf=new byte[8192]; int n;
+            while((n=is.read(buf))>0)out.write(buf,0,n);
+            bytes=out.toByteArray();
+        }
+        String[] parts=new String(bytes,StandardCharsets.UTF_8).split("\n",-1);
+        if(parts.length<4 || !"PBRO1".equals(parts[0]))throw new SecurityException("Invalid backup");
+        final EditText pin=input("Backup PIN");
+        pin.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        pin.setGravity(Gravity.CENTER);
+        new AlertDialog.Builder(this)
+            .setTitle("Restore PasswordBro Backup")
+            .setMessage("Enter the 6-digit PIN used when this backup was created.")
+            .setView(pin).setNegativeButton("Cancel",null)
+            .setPositiveButton("Restore",(d,w)->{
+                try{
+                    String p=pin.getText().toString();
+                    if(p.length()!=6 || !p.matches("\\d{6}"))throw new SecurityException("PIN");
+                    byte[] kb=derive(p,Base64.getDecoder().decode(parts[1]));
+                    Cipher cc=Cipher.getInstance("AES/GCM/NoPadding");
+                    cc.init(Cipher.DECRYPT_MODE,new SecretKeySpec(kb,"AES"),new GCMParameterSpec(128,Base64.getDecoder().decode(parts[2])));
+                    String payload=new String(cc.doFinal(Base64.getDecoder().decode(parts[3])),StandardCharsets.UTF_8);
+                    String[] lines=payload.split("\n",-1);
+                    if(lines.length==0 || !"PasswordBro|1".equals(lines[0]))throw new SecurityException("Version");
+                    ArrayList<Entry> restored=new ArrayList<>();
+                    for(int i=1;i<lines.length;i++){
+                        if(lines[i].isEmpty())continue;
+                        String[] x=lines[i].split("\\.",-1);
+                        if(x.length!=4)throw new SecurityException("Corrupt backup");
+                        restored.add(new Entry(
+                            new String(Base64.getDecoder().decode(x[0]),StandardCharsets.UTF_8),
+                            new String(Base64.getDecoder().decode(x[1]),StandardCharsets.UTF_8),
+                            new String(Base64.getDecoder().decode(x[2]),StandardCharsets.UTF_8),
+                            new String(Base64.getDecoder().decode(x[3]),StandardCharsets.UTF_8)));
+                    }
+                    entries.clear(); entries.addAll(restored); saveVault(); render("");
+                    toast("Restored "+entries.size()+" passwords");
+                }catch(Exception e){toast("Restore failed: wrong PIN or damaged backup");}
+            }).show();
+    }
+
+    private void copyPassword(String p){
         ((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("Password",p));
         toast("Password copied. Clipboard will clear in 30 seconds.");
         new Handler().postDelayed(()->{android.content.ClipboardManager cm=(android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE); if(cm.hasPrimaryClip())cm.setPrimaryClip(ClipData.newPlainText("",""));},30000);
