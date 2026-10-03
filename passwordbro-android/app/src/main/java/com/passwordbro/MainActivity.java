@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
 import android.view.*;
+import android.net.Uri;
 
 import android.widget.*;
 import android.security.keystore.KeyGenParameterSpec;
@@ -20,6 +21,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.SecretKeySpec;
 
 public class MainActivity extends Activity {
     private static final String PREFS = "passwordbro";
@@ -33,6 +35,9 @@ public class MainActivity extends Activity {
     private int failed = 0;
     private long lockUntil = 0;
     private final ArrayList<Entry> entries = new ArrayList<>();
+    private String currentPin = null;
+    private static final int REQUEST_CREATE_BACKUP = 7001;
+    private static final int REQUEST_RESTORE_BACKUP = 7002;
 
     static class Entry {
         String site, user, pass, note;
@@ -88,7 +93,7 @@ public class MainActivity extends Activity {
             String a=p.getText().toString(), d=c.getText().toString();
             if(a.length()!=6 || !a.matches("\\d{6}")) { toast("PIN must contain exactly 6 digits"); return; }
             if(!a.equals(d)){toast("PINs do not match");return;}
-            try{byte[] salt=random(16); prefs.edit().putString(PIN_SALT,b64(salt)).putString(PIN_HASH,b64(derive(a,salt))).apply(); createKey(); unlocked=true; load(); showVault();}
+            try{byte[] salt=random(16); prefs.edit().putString(PIN_SALT,b64(salt)).putString(PIN_HASH,b64(derive(a,salt))).apply(); createKey(); currentPin=a; unlocked=true; load(); showVault();}
             catch(Exception e){toast("Could not initialize secure vault");}
         });
     }
@@ -111,7 +116,7 @@ public class MainActivity extends Activity {
             try{
                 byte[] salt=Base64.getDecoder().decode(prefs.getString(PIN_SALT,""));
                 boolean ok=MessageDigest.isEqual(derive(a,salt),Base64.getDecoder().decode(prefs.getString(PIN_HASH,"")));
-                if(ok){failed=0; unlocked=true; load(); showVault();} else {failed++; if(failed>=5){lockUntil=System.currentTimeMillis()+30000;failed=0;toast("5 failed attempts. Locked for 30 seconds.");} else toast("Incorrect PIN");}
+                if(ok){failed=0; currentPin=a; unlocked=true; load(); showVault();} else {failed++; if(failed>=5){lockUntil=System.currentTimeMillis()+30000;failed=0;toast("5 failed attempts. Locked for 30 seconds.");} else toast("Incorrect PIN");}
             }catch(Exception e){toast("Vault verification failed");}
         });
         pin.setOnEditorActionListener((v,a,e)->{unlock.performClick();return true;});
@@ -124,7 +129,7 @@ public class MainActivity extends Activity {
         TextView bro=text("Bro",27,Color.rgb(53,200,255)); bro.setTypeface(null,1);
         head.addView(title,new LinearLayout.LayoutParams(0,60,1)); head.addView(bro,new LinearLayout.LayoutParams(-2,60));
         root.addView(head);
-        LinearLayout bar=new LinearLayout(this); bar.setPadding(0,0,0,12);
+        LinearLayout bar=new LinearLayout(this); bar.setPadding(0,0,0,8);
         EditText search=input("Search passwords…"); bar.addView(search,new LinearLayout.LayoutParams(0,52,1));
         Button add=button("+"); LinearLayout.LayoutParams ap=new LinearLayout.LayoutParams(56,52); ap.setMargins(8,0,0,0); bar.addView(add,ap);
         root.addView(bar);
@@ -170,7 +175,7 @@ public class MainActivity extends Activity {
         dlg.show();
     }
 
-    private void copyPassword(String p){
+    private void chooseBackupLocation(){\n        if(currentPin==null){toast("Unlock the vault first");return;}\n        Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT); i.setType("application/octet-stream"); i.putExtra(Intent.EXTRA_TITLE,"PasswordBro-Backup.pbpro"); startActivityForResult(i,REQUEST_CREATE_BACKUP);\n    }\n\n    private void chooseBackupFile(){\n        Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT); i.setType("application/octet-stream"); i.addCategory(Intent.CATEGORY_OPENABLE); startActivityForResult(i,REQUEST_RESTORE_BACKUP);\n    }\n\n    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){\n        super.onActivityResult(requestCode,resultCode,data);\n        if(resultCode!=RESULT_OK || data==null || data.getData()==null)return;\n        try{ if(requestCode==REQUEST_CREATE_BACKUP) exportBackup(data.getData()); else if(requestCode==REQUEST_RESTORE_BACKUP) importBackup(data.getData()); }\n        catch(Exception e){toast("Backup operation failed");}\n    }\n\n    private void exportBackup(Uri uri) throws Exception{\n        byte[] salt=random(16); byte[] keyBytes=derive(currentPin,salt); byte[] iv=random(12);\n        Cipher c=Cipher.getInstance("AES/GCM/NoPadding"); c.init(Cipher.ENCRYPT_MODE,new SecretKeySpec(keyBytes,"AES"),new GCMParameterSpec(128,iv));\n        StringBuilder payload=new StringBuilder("PasswordBro|1\\n");\n        for(Entry e:entries) payload.append(b64(e.site.getBytes(StandardCharsets.UTF_8))).append(".").append(b64(e.user.getBytes(StandardCharsets.UTF_8))).append(".").append(b64(e.pass.getBytes(StandardCharsets.UTF_8))).append(".").append(b64(e.note.getBytes(StandardCharsets.UTF_8))).append("\\n");\n        byte[] ct=c.doFinal(payload.toString().getBytes(StandardCharsets.UTF_8));\n        String file="PBRO1\\n"+b64(salt)+"\\n"+b64(iv)+"\\n"+b64(ct)+"\\n";\n        try(java.io.OutputStream os=getContentResolver().openOutputStream(uri)){os.write(file.getBytes(StandardCharsets.UTF_8));}\n        toast("Encrypted backup created");\n    }\n\n    private void importBackup(Uri uri) throws Exception{\n        byte[] bytes; try(java.io.InputStream is=getContentResolver().openInputStream(uri)){java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();byte[] buf=new byte[8192];int n;while((n=is.read(buf))>0)out.write(buf,0,n);bytes=out.toByteArray();}\n        String[] parts=new String(bytes,StandardCharsets.UTF_8).split("\\n",-1);\n        if(parts.length<4 || !"PBRO1".equals(parts[0]))throw new SecurityException("Invalid backup");\n        final EditText pin=input("Backup PIN"); pin.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_VARIATION_PASSWORD); pin.setGravity(Gravity.CENTER);\n        new AlertDialog.Builder(this).setTitle("Restore PasswordBro Backup").setMessage("Enter the 6-digit PIN used when this backup was created.").setView(pin).setNegativeButton("Cancel",null).setPositiveButton("Restore",(d,w)->{\n            try{String p=pin.getText().toString(); if(p.length()!=6)throw new SecurityException("PIN"); byte[] kb=derive(p,Base64.getDecoder().decode(parts[1])); Cipher cc=Cipher.getInstance("AES/GCM/NoPadding");cc.init(Cipher.DECRYPT_MODE,new SecretKeySpec(kb,"AES"),new GCMParameterSpec(128,Base64.getDecoder().decode(parts[2])));String payload=new String(cc.doFinal(Base64.getDecoder().decode(parts[3])),StandardCharsets.UTF_8);\n                String[] lines=payload.split("\\n",-1); ArrayList<Entry> restored=new ArrayList<>(); for(int i=1;i<lines.length;i++){if(lines[i].isEmpty())continue;String[] x=lines[i].split("\\.",-1);if(x.length!=4)throw new SecurityException("Corrupt backup");restored.add(new Entry(new String(Base64.getDecoder().decode(x[0]),StandardCharsets.UTF_8),new String(Base64.getDecoder().decode(x[1]),StandardCharsets.UTF_8),new String(Base64.getDecoder().decode(x[2]),StandardCharsets.UTF_8),new String(Base64.getDecoder().decode(x[3]),StandardCharsets.UTF_8)));}\n                entries.clear();entries.addAll(restored);saveVault();render("");toast("Restored "+entries.size()+" passwords");\n            }catch(Exception e){toast("Restore failed: wrong PIN or damaged backup");}\n        }).show();\n    }\n\n    private void copyPassword(String p){
         ((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("Password",p));
         toast("Password copied. Clipboard will clear in 30 seconds.");
         new Handler().postDelayed(()->{android.content.ClipboardManager cm=(android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE); if(cm.hasPrimaryClip())cm.setPrimaryClip(ClipData.newPlainText("",""));},30000);
