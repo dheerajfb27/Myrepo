@@ -1,18 +1,32 @@
 package com.dheeraj.lavaglow;
-import android.graphics.*;import android.os.*;import android.service.wallpaper.WallpaperService;import android.view.SurfaceHolder;import java.text.*;import java.util.*;
+import android.graphics.*;import android.os.*;import android.service.wallpaper.WallpaperService;import android.view.SurfaceHolder;
 public class LavaGlowWallpaperService extends WallpaperService{
  public Engine onCreateEngine(){return new LavaEngine();}
- class LavaEngine extends Engine{Handler h=new Handler();Paint p=new Paint(3);float t;boolean on;String[] quotes={"Create your own light.","Small steps. Bright days.","Stay curious. Keep glowing.","Make today beautiful.","Dream. Build. Repeat."};Runnable r=()->drawFrame();
-  public void onVisibilityChanged(boolean v){on=v;if(v)drawFrame();else h.removeCallbacks(r);}public void onSurfaceChanged(SurfaceHolder s,int f,int w,int he){drawFrame();}public void onSurfaceDestroyed(SurfaceHolder s){on=false;h.removeCallbacks(r);}
-  void drawFrame(){Canvas c=null;try{c=getSurfaceHolder().lockCanvas();if(c!=null)render(c,c.getWidth(),c.getHeight());}finally{if(c!=null)getSurfaceHolder().unlockCanvasAndPost(c);}t+=.035f;h.removeCallbacks(r);if(on)h.postDelayed(r,33);}
-  void txt(Canvas c,String s,float x,float y,float size,int color,Paint.Align a){p.setShader(null);p.setStyle(Paint.Style.FILL);p.setTypeface(Typeface.create("sans",Typeface.BOLD));p.setTextSize(size);p.setTextAlign(a);p.setColor(color);p.setAlpha(255);c.drawText(s,x,y,p);}
-  void render(Canvas c,float w,float h){p.setShader(new LinearGradient(0,0,w,h,Color.rgb(3,7,20),Color.rgb(34,3,48),Shader.TileMode.CLAMP));c.drawRect(0,0,w,h,p);p.setShader(null);float cx=w/2,top=h*.18f,bottom=h*.78f,lw=Math.min(w*.64f,h*.64f);
-   txt(c,new SimpleDateFormat("HH:mm",Locale.getDefault()).format(new Date()),cx,h*.105f,w*.105f,Color.WHITE,Paint.Align.CENTER);txt(c,new SimpleDateFormat("EEEE, d MMMM",Locale.getDefault()).format(new Date()),cx,h*.145f,w*.035f,Color.rgb(170,225,255),Paint.Align.CENTER);
-   p.setColor(Color.rgb(0,220,255));p.setAlpha(32);p.setMaskFilter(new BlurMaskFilter(lw*.38f,BlurMaskFilter.Blur.NORMAL));c.drawCircle(cx,h*.49f,lw*.43f,p);p.setMaskFilter(null);
-   Path g=new Path();g.moveTo(cx-lw*.18f,top);g.cubicTo(cx-lw*.31f,top+lw*.16f,cx-lw*.31f,bottom-lw*.12f,cx-lw*.18f,bottom);g.quadTo(cx,bottom+lw*.05f,cx+lw*.18f,bottom);g.cubicTo(cx+lw*.31f,bottom-lw*.12f,cx+lw*.31f,top+lw*.16f,cx+lw*.18f,top);g.close();p.setShader(new LinearGradient(cx-lw*.3f,top,cx+lw*.3f,bottom,Color.argb(80,40,240,255),Color.argb(22,255,0,180),Shader.TileMode.CLAMP));c.drawPath(g,p);p.setShader(null);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(lw*.018f);p.setColor(Color.argb(175,190,255,255));c.drawPath(g,p);p.setStyle(Paint.Style.FILL);
-   for(int i=0;i<7;i++){float q=i*1.1f;float y=top+lw*.08f+(float)(.5+.5*Math.sin(t*(.55+i*.06)+q))*(bottom-top-lw*.15f);float x=cx+(float)Math.sin(t*(.35+i*.05)+q)*lw*.13f;float rr=lw*(.05f+.018f*(float)Math.sin(t+q));int col=i%3==0?Color.rgb(255,45,175):i%3==1?Color.rgb(0,235,255):Color.rgb(145,60,255);p.setColor(col);p.setAlpha(235);p.setMaskFilter(new BlurMaskFilter(lw*.035f,BlurMaskFilter.Blur.NORMAL));c.drawOval(x-rr*1.15f,y-rr*1.35f,x+rr*1.15f,y+rr*1.35f,p);p.setMaskFilter(null);}
-   p.setAlpha(255);p.setShader(new LinearGradient(cx-lw*.31f,bottom,cx+lw*.31f,bottom+lw*.16f,Color.rgb(10,14,28),Color.rgb(90,110,135),Shader.TileMode.CLAMP));c.drawRoundRect(cx-lw*.31f,bottom-lw*.02f,cx+lw*.31f,bottom+lw*.16f,lw*.05f,lw*.05f,p);p.setShader(null);
-   txt(c,"☀  24°  •  Partly Cloudy",cx,h*.865f,w*.045f,Color.rgb(130,240,255),Paint.Align.CENTER);String q=quotes[(int)(System.currentTimeMillis()/60000)%quotes.length];txt(c,"“"+q+"”",cx,h*.93f,w*.032f,Color.rgb(235,235,255),Paint.Align.CENTER);
+ class LavaEngine extends Engine{
+  Handler h=new Handler();Paint p=new Paint(3);float t;boolean on;Runnable r=()->drawFrame();
+  public void onVisibilityChanged(boolean v){on=v;if(v)drawFrame();else h.removeCallbacks(r);}
+  public void onSurfaceChanged(SurfaceHolder s,int f,int w,int he){drawFrame();}
+  public void onSurfaceDestroyed(SurfaceHolder s){on=false;h.removeCallbacks(r);}
+  void drawFrame(){Canvas c=null;try{c=getSurfaceHolder().lockCanvas();if(c!=null)render(c,c.getWidth(),c.getHeight());}finally{if(c!=null)getSurfaceHolder().unlockCanvasAndPost(c);}t+=.018f;h.removeCallbacks(r);if(on)h.postDelayed(r,33);}
+  void weather(Canvas c,float w,float h){p.setTypeface(Typeface.create("sans",Typeface.BOLD));p.setTextAlign(Paint.Align.CENTER);p.setTextSize(w*.042f);p.setColor(Color.WHITE);p.setAlpha(235);c.drawText("☀  24°  •  Partly Cloudy",w/2,h*.93f,p);}
+  void render(Canvas c,float w,float h){
+   // Full-screen animated abstract neon background; no lamp, clock, date, quote, or other UI.
+   int[] a={Color.rgb(3,7,24),Color.rgb(30,3,48),Color.rgb(2,34,55),Color.rgb(45,4,28)};
+   p.setShader(new LinearGradient(0,0,w,h,a[(int)(t*.12f)%a.length],a[((int)(t*.12f)+1)%a.length],Shader.TileMode.MIRROR));c.drawRect(0,0,w,h,p);p.setShader(null);
+   for(int i=0;i<18;i++){
+    float phase=i*.73f;
+    float x=w*(.5f+.48f*(float)Math.sin(t*(.20f+i*.013f)+phase));
+    float y=h*(.5f+.55f*(float)Math.cos(t*(.16f+i*.011f)+phase*1.7f));
+    float rr=Math.min(w,h)*(.045f+.018f*(float)Math.sin(t*.7f+phase));
+    int col=i%4==0?Color.rgb(255,30,180):i%4==1?Color.rgb(0,235,255):i%4==2?Color.rgb(135,50,255):Color.rgb(30,255,145);
+    p.setColor(col);p.setAlpha(125);p.setMaskFilter(new BlurMaskFilter(rr*2.8f,BlurMaskFilter.Blur.NORMAL));c.drawCircle(x,y,rr,p);p.setMaskFilter(null);
+    p.setAlpha(180);c.drawCircle(x,y,rr*.28f,p);
+   }
+   // Slow-moving luminous waves.
+   p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(Math.max(2,w*.004f));
+   for(int k=0;k<5;k++){Path path=new Path();for(int x=0;x<=w;x+=Math.max(8,(int)w/90)){float yy=h*(.15f+k*.18f)+h*.055f*(float)Math.sin(x/w*7+t*.65f+k);if(x==0)path.moveTo(x,yy);else path.lineTo(x,yy);}p.setColor(Color.argb(75,80,230,255));c.drawPath(path,p);}p.setStyle(Paint.Style.FILL);
+   // Keep weather as the only visible UI element.
+   weather(c,w,h);
   }
  }
 }
