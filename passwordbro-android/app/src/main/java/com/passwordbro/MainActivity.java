@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
 import android.view.*;
+import android.graphics.Typeface;
 import android.net.Uri;
 
 import android.widget.*;
@@ -125,7 +126,7 @@ public class MainActivity extends Activity {
     private void showVault(){
         base();
         LinearLayout head=new LinearLayout(this); head.setGravity(Gravity.CENTER_VERTICAL);
-        TextView title=text("Password",27,Color.WHITE); title.setTypeface(null,1);
+        TextView title=text("Password",27,Color.WHITE); title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
         TextView bro=text("Bro",27,Color.rgb(53,200,255)); bro.setTypeface(null,1);
         head.addView(title,new LinearLayout.LayoutParams(0,60,1)); head.addView(bro,new LinearLayout.LayoutParams(-2,60));
         root.addView(head);
