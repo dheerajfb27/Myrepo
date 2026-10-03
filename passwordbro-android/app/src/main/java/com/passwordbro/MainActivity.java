@@ -150,7 +150,7 @@ public class MainActivity extends Activity {
             LinearLayout card=new LinearLayout(this); card.setOrientation(LinearLayout.VERTICAL); card.setPadding(12,8,12,8); card.setBackground(bg(Color.rgb(16,35,58),20));
             LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-1,86); cp.setMargins(0,0,0,10);
             LinearLayout row=new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL);
-            TextView name=text(e.site,18,Color.WHITE); name.setTypeface(null,1); row.addView(name,new LinearLayout.LayoutParams(0,42,1));
+            TextView name=text(e.site,18,Color.WHITE); name.setTypeface(Typeface.DEFAULT,Typeface.BOLD); row.addView(name,new LinearLayout.LayoutParams(0,42,1));
             Button copy=button("Copy"); row.addView(copy,new LinearLayout.LayoutParams(82,44)); card.addView(row);
             TextView user=text(e.user,13,Color.rgb(156,176,200)); card.addView(user);
             final int idx=i;
