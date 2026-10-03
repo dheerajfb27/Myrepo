@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
     fun saveWallpaper(bitmap: Bitmap): Boolean {
         return try {
             val values = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, "WallPro-${Date.now()}.png")
+                put(MediaStore.Images.Media.DISPLAY_NAME, "WallPro-" + System.currentTimeMillis() + ".png")
                 put(MediaStore.Images.Media.MIME_TYPE, "image/png")
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/WallPro-AI")
             }
@@ -175,7 +175,8 @@ fun WallProApp() {
     }
 }
 
-private fun jsonQuote(value: String): String = """ + value.replace("\","\\").replace(""","\\"").replace("
-","\\n").replace("","\\r") + """
+private fun jsonQuote(value: String): String =
+    """ + value.replace("\\", "\\\\").replace(""", "\\"").replace("\n", "\\n").replace("\r", "\\r") + """
+
 private fun extractError(body: String): String =
     Regex(""""error"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1) ?: "Server request failed."
