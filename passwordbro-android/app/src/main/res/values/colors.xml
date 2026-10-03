@@ -1,0 +1,11 @@
+<resources>
+    <color name="pb_bg">#071426</color>
+    <color name="pb_card">#10233A</color>
+    <color name="pb_card2">#142B46</color>
+    <color name="pb_blue">#1597FF</color>
+    <color name="pb_blue2">#35C8FF</color>
+    <color name="pb_text">#F4F8FF</color>
+    <color name="pb_muted">#9CB0C8</color>
+    <color name="pb_green">#27D17F</color>
+    <color name="pb_red">#FF5D68</color>
+</resources>
