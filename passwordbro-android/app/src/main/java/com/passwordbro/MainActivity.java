@@ -7,8 +7,10 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
 import android.view.*;
-import android.view.inputmethod.InputMethodManager;
+
 import android.widget.*;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.KeySpec;
