@@ -127,7 +127,7 @@ public class MainActivity extends Activity {
         base();
         LinearLayout head=new LinearLayout(this); head.setGravity(Gravity.CENTER_VERTICAL);
         TextView title=text("Password",27,Color.WHITE); title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
-        TextView bro=text("Bro",27,Color.rgb(53,200,255)); bro.setTypeface(null,1);
+        TextView bro=text("Bro",27,Color.rgb(53,200,255)); bro.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
         head.addView(title,new LinearLayout.LayoutParams(0,60,1)); head.addView(bro,new LinearLayout.LayoutParams(-2,60));
         root.addView(head);
         LinearLayout bar=new LinearLayout(this); bar.setPadding(0,0,0,8);
