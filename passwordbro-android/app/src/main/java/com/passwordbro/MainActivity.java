@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
         e.setSingleLine(true); e.setPadding(18,4,18,4); e.setBackground(bg(Color.rgb(16,35,58),18)); return e;
     }
     private void base(){
-        root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setPadding(20,22,20,18);
+        root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setGravity(Gravity.CENTER_VERTICAL); root.setPadding(20,22,20,18);
         root.setBackgroundColor(Color.rgb(7,20,38)); setContentView(root);
     }
 
@@ -83,13 +83,13 @@ public class MainActivity extends Activity {
         TextView title=text("PasswordBro",30,Color.WHITE); title.setGravity(Gravity.CENTER); root.addView(title);
         TextView sub=text("Create your 6-digit master PIN",16,Color.rgb(156,176,200)); sub.setGravity(Gravity.CENTER); root.addView(sub);
         EditText p=input("6-digit PIN"); p.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_VARIATION_PASSWORD); p.setGravity(Gravity.CENTER); p.setTextSize(22);
-        root.addView(p, new LinearLayout.LayoutParams(-1,58));
+        LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(-1,58); pp.setMargins(0,8,0,0); root.addView(p, pp);
         Space sp=new Space(this); root.addView(sp,new LinearLayout.LayoutParams(1,14));
         EditText c=input("Confirm PIN"); c.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_VARIATION_PASSWORD); c.setGravity(Gravity.CENTER); c.setTextSize(22);
-        root.addView(c,new LinearLayout.LayoutParams(-1,58));
+        LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-1,58); cp.setMargins(0,8,0,0); root.addView(c,cp);
         TextView info=text("Your vault stays on this device and is encrypted.",14,Color.rgb(156,176,200)); info.setGravity(Gravity.CENTER); root.addView(info);
         Space s2=new Space(this); root.addView(s2,new LinearLayout.LayoutParams(1,15));
-        Button save=button("Create Secure Vault"); root.addView(save,new LinearLayout.LayoutParams(-1,54));
+        Button save=button("Create Secure Vault"); LinearLayout.LayoutParams savep=new LinearLayout.LayoutParams(-1,54); savep.setMargins(0,10,0,0); root.addView(save,savep);
         save.setOnClickListener(v->{
             String a=p.getText().toString(), d=c.getText().toString();
             if(a.length()!=6 || !a.matches("\\d{6}")) { toast("PIN must contain exactly 6 digits"); return; }
@@ -106,9 +106,9 @@ public class MainActivity extends Activity {
         TextView title=text("PasswordBro",30,Color.WHITE); title.setGravity(Gravity.CENTER); root.addView(title);
         TextView sub=text("Enter your 6-digit PIN",16,Color.rgb(156,176,200)); sub.setGravity(Gravity.CENTER); root.addView(sub);
         EditText pin=input("••••••"); pin.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_VARIATION_PASSWORD); pin.setGravity(Gravity.CENTER); pin.setTextSize(25);
-        root.addView(pin,new LinearLayout.LayoutParams(-1,62));
+        LinearLayout.LayoutParams pinp=new LinearLayout.LayoutParams(-1,62); pinp.setMargins(0,10,0,0); root.addView(pin,pinp);
         Space sp=new Space(this); root.addView(sp,new LinearLayout.LayoutParams(1,15));
-        Button unlock=button("Unlock Vault"); root.addView(unlock,new LinearLayout.LayoutParams(-1,54));
+        Button unlock=button("Unlock Vault"); LinearLayout.LayoutParams unlockp=new LinearLayout.LayoutParams(-1,54); unlockp.setMargins(0,10,0,0); root.addView(unlock,unlockp);
         TextView hint=text("6 digits • Local • Encrypted",13,Color.rgb(120,145,170)); hint.setGravity(Gravity.CENTER); root.addView(hint);
         unlock.setOnClickListener(v->{
             if(System.currentTimeMillis()<lockUntil){toast("Too many attempts. Try again shortly.");return;}
@@ -168,7 +168,7 @@ public class MainActivity extends Activity {
         if(existing!=null){site.setText(existing.site);user.setText(existing.user);pass.setText(existing.pass);note.setText(existing.note);}
         box.addView(site,new LinearLayout.LayoutParams(-1,54));box.addView(user,new LinearLayout.LayoutParams(-1,54));box.addView(pass,new LinearLayout.LayoutParams(-1,54));box.addView(note,new LinearLayout.LayoutParams(-1,54));
         LinearLayout actions=new LinearLayout(this); Button gen=button("Generate"); Button save=button(existing==null?"Save":"Update"); actions.addView(gen,new LinearLayout.LayoutParams(0,52,1)); LinearLayout.LayoutParams sm=new LinearLayout.LayoutParams(0,52,1);sm.setMargins(8,0,0,0);actions.addView(save,sm); box.addView(actions);
-        AlertDialog dlg=new AlertDialog.Builder(this).setTitle(existing==null?"Add Password":"Edit Password").setView(box).create();
+        ScrollView scroll=new ScrollView(this); scroll.setFillViewport(true); scroll.addView(box);\n        AlertDialog dlg=new AlertDialog.Builder(this).setTitle(existing==null?"Add Password":"Edit Password").setView(scroll).create();
         gen.setOnClickListener(v->pass.setText(generatePassword(16)));
         save.setOnClickListener(v->{String s=site.getText().toString().trim(),u=user.getText().toString().trim(),p=pass.getText().toString(),n=note.getText().toString();if(s.isEmpty()||p.isEmpty()){toast("Website and password are required");return;}if(existing==null)entries.add(new Entry(s,u,p,n));else entries.set(index,new Entry(s,u,p,n));saveVault();dlg.dismiss();render("");});
         dlg.setButton(AlertDialog.BUTTON_NEGATIVE,"Cancel",(d,w)->d.dismiss());
