@@ -92,7 +92,7 @@ fun WallProApp() {
                     conn.connectTimeout = 15000
                     conn.readTimeout = 120000
                     conn.doOutput = true
-                    val json = """{"prompt":${jsonQuote(prompt)},"target":${jsonQuote(target)},"style":${jsonQuote(style)}}"""
+                    val json = org.json.JSONObject().put("prompt", prompt).put("target", target).put("style", style).toString()
                     conn.outputStream.use { it.write(json.toByteArray()) }
                     val body = (if (conn.responseCode in 200..299) conn.inputStream else conn.errorStream).bufferedReader().use { it.readText() }
                     if (conn.responseCode !in 200..299) throw IllegalStateException(extractError(body))
@@ -174,9 +174,6 @@ fun WallProApp() {
         }
     }
 }
-
-private fun jsonQuote(value: String): String =
-    """ + value.replace("\\", "\\\\").replace(""", "\\"").replace("\n", "\\n").replace("\r", "\\r") + """
 
 private fun extractError(body: String): String =
     Regex(""""error"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1) ?: "Server request failed."
