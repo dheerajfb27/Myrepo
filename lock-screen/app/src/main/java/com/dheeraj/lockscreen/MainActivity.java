@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.*;
 import java.util.*;
 
@@ -21,7 +22,7 @@ public class MainActivity extends Activity {
     HorizontalScrollView hsv=new HorizontalScrollView(this); LinearLayout cats=new LinearLayout(this); cats.setOrientation(LinearLayout.HORIZONTAL);
     for(String c:CATS){Button x=new Button(this);x.setText(c);x.setOnClickListener(v->toast(c+" wallpapers"));cats.addView(x,new LinearLayout.LayoutParams(-2,60));} hsv.addView(cats);root.addView(hsv);
     GridLayout grid=new GridLayout(this); grid.setColumnCount(2); grid.setUseDefaultMargins(true);
-    for(String theme:THEMES){Button card=new Button(this);card.setText(theme+"\nLIVE");card.setTextSize(15);card.setOnClickListener(v->openPicker());grid.addView(card,new ViewGroup.LayoutParams(0,170)); GridLayout.LayoutParams p=(GridLayout.LayoutParams)card.getLayoutParams();p.width=0;p.height=170;p.columnSpec=GridLayout.spec(GridLayout.UNDEFINED,1f);card.setLayoutParams(p);}
+    for(String theme:THEMES){Button card=new Button(this);card.setText(theme+"\nLIVE");card.setTextSize(15);card.setOnClickListener(v->openPicker());grid.addView(card,new LayoutParams(0,170)); GridLayout.LayoutParams p=(GridLayout.LayoutParams)card.getLayoutParams();p.width=0;p.height=170;p.columnSpec=GridLayout.spec(GridLayout.UNDEFINED,1f);card.setLayoutParams(p);}
     ScrollView sv=new ScrollView(this);sv.addView(grid);root.addView(sv,new LinearLayout.LayoutParams(-1,0,1)); 
     Button set=new Button(this);set.setText("SET WALLPAPER");set.setOnClickListener(v->openPicker());root.addView(set,new LinearLayout.LayoutParams(-1,64));setContentView(root);
   }
