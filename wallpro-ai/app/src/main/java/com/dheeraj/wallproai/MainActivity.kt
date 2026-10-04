@@ -46,23 +46,43 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent { WallProApp() }
     }
+
     fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-    fun saveWallpaper(bitmap: Bitmap): Boolean = try {
+
+    fun downloadWallpaper(bitmap: Bitmap): Boolean = try {
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "WallPro-" + System.currentTimeMillis() + ".jpg")
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
             put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/WallPro")
+            put(MediaStore.Images.Media.IS_PENDING, 1)
         }
-        val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
-        contentResolver.openOutputStream(uri)?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it) } ?: return false
-        true
-    } catch (_: Exception) { false }
+        val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+            ?: return false
+        val written = contentResolver.openOutputStream(uri)?.use {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it)
+        } ?: false
+        if (written) {
+            val done = ContentValues().apply {
+                put(MediaStore.Images.Media.IS_PENDING, 0)
+            }
+            contentResolver.update(uri, done, null, null)
+            true
+        } else {
+            contentResolver.delete(uri, null, null)
+            false
+        }
+    } catch (_: Exception) {
+        false
+    }
+
     fun setWallpaper(bitmap: Bitmap): Boolean = try {
         val stream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 95, stream)
         WallpaperManager.getInstance(this).setStream(stream.toByteArray().inputStream())
         true
-    } catch (_: Exception) { false }
+    } catch (_: Exception) {
+        false
+    }
 }
 
 @Composable
@@ -76,19 +96,25 @@ fun WallProApp() {
     var loading by remember { mutableStateOf(false) }
     var loadingImage by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("") }
+    var actionBusy by remember { mutableStateOf(false) }
 
     fun search() {
         val q = query.trim()
-        if (q.isEmpty()) { status = "Enter something to search."; return }
+        if (q.isEmpty()) {
+            status = "Enter something to search."
+            return
+        }
         loading = true
-        status = "Searching the internet..."
+        status = "Searching wallpapers..."
         scope.launch {
             try {
                 wallpapers = withContext(Dispatchers.IO) { searchWikimedia(q) }
                 status = if (wallpapers.isEmpty()) "No wallpapers found." else wallpapers.size.toString() + " wallpapers found."
-            } catch (e: Exception) {
-                status = e.message ?: "Search failed."
-            } finally { loading = false }
+            } catch (_: Exception) {
+                status = "Search failed. Check your internet connection."
+            } finally {
+                loading = false
+            }
         }
     }
 
@@ -100,9 +126,11 @@ fun WallProApp() {
             try {
                 selectedBitmap = withContext(Dispatchers.IO) { downloadBitmap(item.imageUrl) }
                 if (selectedBitmap == null) status = "Could not load this wallpaper."
-            } catch (e: Exception) {
-                status = e.message ?: "Could not load image."
-            } finally { loadingImage = false }
+            } catch (_: Exception) {
+                status = "Could not load this image."
+            } finally {
+                loadingImage = false
+            }
         }
     }
 
@@ -115,36 +143,74 @@ fun WallProApp() {
                     Text("WallPro", fontSize = 30.sp, fontWeight = FontWeight.Bold)
                     Text(" • Wallpapers", fontSize = 18.sp, color = Accent)
                 }
-                Text("Discover wallpapers from the internet • Pixel 10 optimized", color = Color.LightGray, fontSize = 13.sp)
+                Text(
+                    "Discover and download wallpapers from the internet",
+                    color = Color.LightGray,
+                    fontSize = 13.sp
+                )
+
                 Spacer(Modifier.height(12.dp))
+
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
-                        value = query, onValueChange = { query = it },
-                        modifier = Modifier.weight(1f), singleLine = true,
+                        value = query,
+                        onValueChange = { query = it },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
                         label = { Text("Search wallpapers") },
                         shape = RoundedCornerShape(16.dp)
                     )
                     Spacer(Modifier.width(8.dp))
-                    Button(onClick = { search() }, enabled = !loading, modifier = Modifier.height(56.dp), shape = RoundedCornerShape(16.dp)) { Text("Search") }
+                    Button(
+                        onClick = { search() },
+                        enabled = !loading,
+                        modifier = Modifier.height(56.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) { Text("Search") }
                 }
+
                 Spacer(Modifier.height(10.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
                     listOf("Nature", "Space", "Cars", "Anime").forEach { category ->
-                        FilterChip(selected = false, onClick = { query = category + " wallpaper"; search() }, label = { Text(category, fontSize = 12.sp) })
+                        FilterChip(
+                            selected = false,
+                            onClick = {
+                                query = category + " wallpaper"
+                                search()
+                            },
+                            label = { Text(category, fontSize = 12.sp) }
+                        )
                     }
                 }
+
                 if (status.isNotBlank()) {
                     Spacer(Modifier.height(8.dp))
                     Text(status, color = Color.LightGray, fontSize = 12.sp)
                 }
+
                 if (loading) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 } else {
-                    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(vertical = 12.dp)) {
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(vertical = 12.dp)
+                    ) {
                         items(wallpapers.chunked(2)) { row ->
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
                                 row.forEach { item ->
-                                    WallpaperCard(item, Modifier.weight(1f)) { selectWallpaper(item) }
+                                    WallpaperCard(item, Modifier.weight(1f)) {
+                                        selectWallpaper(item)
+                                    }
                                 }
                                 if (row.size == 1) Spacer(Modifier.weight(1f))
                             }
@@ -156,38 +222,78 @@ fun WallProApp() {
 
         selected?.let { item ->
             AlertDialog(
-                onDismissRequest = { selected = null; selectedBitmap = null },
-                title = { Text(item.title.removePrefix("File:")) },
+                onDismissRequest = {
+                    selected = null
+                    selectedBitmap = null
+                },
+                title = { Text(item.title.removePrefix("File:"), maxLines = 2) },
                 text = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (loadingImage) CircularProgressIndicator()
-                        else if (selectedBitmap != null) Image(
-                            selectedBitmap!!.asImageBitmap(), contentDescription = item.title,
-                            modifier = Modifier.fillMaxWidth().heightIn(max = 430.dp), contentScale = ContentScale.Fit
-                        )
+                        if (loadingImage) {
+                            CircularProgressIndicator()
+                        } else if (selectedBitmap != null) {
+                            Image(
+                                selectedBitmap!!.asImageBitmap(),
+                                contentDescription = item.title,
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 430.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Text("Image unavailable", color = Color.Gray)
+                        }
                         Spacer(Modifier.height(8.dp))
                         Text("Source: Wikimedia Commons", fontSize = 11.sp, color = Color.Gray)
                     }
                 },
                 confirmButton = {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(enabled = selectedBitmap != null, onClick = {
-                            val image = selectedBitmap ?: return@OutlinedButton
-                            scope.launch(Dispatchers.IO) {
-                                val ok = activity.saveWallpaper(image)
-                                withContext(Dispatchers.Main) { activity.toast(if (ok) "Saved to Pictures/WallPro" else "Could not save wallpaper.") }
+                        OutlinedButton(
+                            enabled = selectedBitmap != null && !actionBusy,
+                            onClick = {
+                                val image = selectedBitmap ?: return@OutlinedButton
+                                actionBusy = true
+                                scope.launch(Dispatchers.IO) {
+                                    val ok = activity.downloadWallpaper(image)
+                                    withContext(Dispatchers.Main) {
+                                        actionBusy = false
+                                        activity.toast(
+                                            if (ok) "Wallpaper downloaded to Pictures/WallPro"
+                                            else "Download failed. Please try again."
+                                        )
+                                    }
+                                }
                             }
-                        }) { Text("Save") }
-                        Button(enabled = selectedBitmap != null, onClick = {
-                            val image = selectedBitmap ?: return@Button
-                            scope.launch(Dispatchers.IO) {
-                                val ok = activity.setWallpaper(image)
-                                withContext(Dispatchers.Main) { activity.toast(if (ok) "Wallpaper applied." else "Could not set wallpaper.") }
+                        ) {
+                            Text(if (actionBusy) "Saving..." else "Download")
+                        }
+
+                        Button(
+                            enabled = selectedBitmap != null && !actionBusy,
+                            onClick = {
+                                val image = selectedBitmap ?: return@Button
+                                actionBusy = true
+                                scope.launch(Dispatchers.IO) {
+                                    val ok = activity.setWallpaper(image)
+                                    withContext(Dispatchers.Main) {
+                                        actionBusy = false
+                                        activity.toast(
+                                            if (ok) "Wallpaper applied."
+                                            else "Could not set wallpaper."
+                                        )
+                                    }
+                                }
                             }
-                        }) { Text("Set") }
+                        ) {
+                            Text("Set Wallpaper")
+                        }
                     }
                 },
-                dismissButton = { TextButton(onClick = { selected = null; selectedBitmap = null }) { Text("Close") } }
+                dismissButton = {
+                    TextButton(onClick = {
+                        selected = null
+                        selectedBitmap = null
+                    }) { Text("Close") }
+                }
             )
         }
     }
@@ -197,36 +303,61 @@ fun WallProApp() {
 private fun WallpaperCard(item: Wallpaper, modifier: Modifier, onClick: () -> Unit) {
     var bitmap by remember(item.imageUrl) { mutableStateOf<Bitmap?>(null) }
     var loading by remember(item.imageUrl) { mutableStateOf(true) }
+
     LaunchedEffect(item.imageUrl) {
-        bitmap = try { withContext(Dispatchers.IO) { downloadBitmap(item.imageUrl) } } catch (_: Exception) { null }
+        bitmap = try {
+            withContext(Dispatchers.IO) { downloadBitmap(item.imageUrl) }
+        } catch (_: Exception) {
+            null
+        }
         loading = false
     }
+
     Card(modifier.clickable(onClick = onClick), shape = RoundedCornerShape(18.dp)) {
-        if (bitmap != null) Image(bitmap!!.asImageBitmap(), contentDescription = item.title, modifier = Modifier.fillMaxWidth().height(220.dp), contentScale = ContentScale.Crop)
-        else Box(Modifier.fillMaxWidth().height(220.dp), contentAlignment = Alignment.Center) {
-            if (loading) CircularProgressIndicator(Modifier.size(24.dp)) else Text("Image unavailable", color = Color.Gray)
+        if (bitmap != null) {
+            Image(
+                bitmap!!.asImageBitmap(),
+                contentDescription = item.title,
+                modifier = Modifier.fillMaxWidth().height(220.dp),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(Modifier.fillMaxWidth().height(220.dp), contentAlignment = Alignment.Center) {
+                if (loading) CircularProgressIndicator(Modifier.size(24.dp))
+                else Text("Image unavailable", color = Color.Gray)
+            }
         }
     }
 }
 
 private fun searchWikimedia(query: String): List<Wallpaper> {
     val encoded = URLEncoder.encode(query + " filetype:bitmap", "UTF-8")
-    val api = "https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=" + encoded + "&gsrnamespace=6&gsrlimit=20&prop=imageinfo&iiprop=url&iiurlwidth=900&format=json&origin=*"
+    val api = "https://commons.wikimedia.org/w/api.php?action=query&generator=search" +
+        "&gsrsearch=" + encoded + "&gsrnamespace=6&gsrlimit=20" +
+        "&prop=imageinfo&iiprop=url&iiurlwidth=900&format=json&origin=*"
+
     val connection = (URL(api).openConnection() as HttpURLConnection)
     connection.connectTimeout = 15000
     connection.readTimeout = 30000
     connection.setRequestProperty("User-Agent", "WallPro/1.0 Android")
-    val body = connection.inputStream.bufferedReader().use { it.readText() }
-    val pages = JSONObject(body).optJSONObject("query")?.optJSONObject("pages") ?: return emptyList()
-    val result = mutableListOf<Wallpaper>()
-    pages.keys().forEach { key ->
-        val page = pages.optJSONObject(key) ?: return@forEach
-        val title = page.optString("title")
-        val info = page.optJSONArray("imageinfo")?.optJSONObject(0) ?: return@forEach
-        val imageUrl = info.optString("thumburl").ifBlank { info.optString("url") }
-        if (imageUrl.isNotBlank()) result.add(Wallpaper(title, imageUrl, "https://commons.wikimedia.org"))
+    try {
+        if (connection.responseCode !in 200..299) return emptyList()
+        val body = connection.inputStream.bufferedReader().use { it.readText() }
+        val pages = JSONObject(body).optJSONObject("query")?.optJSONObject("pages") ?: return emptyList()
+        val result = mutableListOf<Wallpaper>()
+        pages.keys().forEach { key ->
+            val page = pages.optJSONObject(key) ?: return@forEach
+            val title = page.optString("title")
+            val info = page.optJSONArray("imageinfo")?.optJSONObject(0) ?: return@forEach
+            val imageUrl = info.optString("thumburl").ifBlank { info.optString("url") }
+            if (imageUrl.isNotBlank()) {
+                result.add(Wallpaper(title, imageUrl, "https://commons.wikimedia.org"))
+            }
+        }
+        return result
+    } finally {
+        connection.disconnect()
     }
-    return result
 }
 
 private fun downloadBitmap(url: String): Bitmap? {
@@ -234,5 +365,10 @@ private fun downloadBitmap(url: String): Bitmap? {
     connection.connectTimeout = 15000
     connection.readTimeout = 30000
     connection.setRequestProperty("User-Agent", "WallPro/1.0 Android")
-    connection.inputStream.use { return BitmapFactory.decodeStream(it) }
+    try {
+        if (connection.responseCode !in 200..299) return null
+        connection.inputStream.use { return BitmapFactory.decodeStream(it) }
+    } finally {
+        connection.disconnect()
+    }
 }
