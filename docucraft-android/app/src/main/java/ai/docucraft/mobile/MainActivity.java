@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String guessName(String cd, String mime) {
         if (cd != null && cd.contains("filename=")) {
-            String n = cd.substring(cd.indexOf("filename=") + 9).replace(""", "").trim();
+            String n = cd.substring(cd.indexOf("filename=") + 9).replace("\"", "").trim();
             if (!n.isEmpty()) return n;
         }
         if ("application/pdf".equalsIgnoreCase(mime)) return "DocuCraft-document.pdf";
