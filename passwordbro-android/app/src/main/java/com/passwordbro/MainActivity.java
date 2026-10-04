@@ -78,7 +78,6 @@ public class MainActivity extends Activity {
 
     private void showSetup(){
         base();
-        Space top=new Space(this); root.addView(top,new LinearLayout.LayoutParams(1,45));
         TextView icon=text("🔐",54,Color.WHITE); icon.setGravity(Gravity.CENTER); root.addView(icon,new LinearLayout.LayoutParams(-1,75));
         TextView title=text("PasswordBro",30,Color.WHITE); title.setGravity(Gravity.CENTER); root.addView(title);
         TextView sub=text("Create your 6-digit master PIN",16,Color.rgb(156,176,200)); sub.setGravity(Gravity.CENTER); root.addView(sub);
@@ -101,7 +100,6 @@ public class MainActivity extends Activity {
 
     private void showLock(){
         base();
-        Space top=new Space(this); root.addView(top,new LinearLayout.LayoutParams(1,55));
         TextView icon=text("🛡️",56,Color.WHITE); icon.setGravity(Gravity.CENTER); root.addView(icon,new LinearLayout.LayoutParams(-1,78));
         TextView title=text("PasswordBro",30,Color.WHITE); title.setGravity(Gravity.CENTER); root.addView(title);
         TextView sub=text("Enter your 6-digit PIN",16,Color.rgb(156,176,200)); sub.setGravity(Gravity.CENTER); root.addView(sub);
