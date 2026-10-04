@@ -1,5 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
- android:id="@+id/refresh_layout" android:layout_width="match_parent" android:layout_height="match_parent">
-<WebView android:id="@+id/web_view" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#0B1020"/>
-</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/refresh_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <WebView
+            android:id="@+id/web_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#0B1020" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <Button
+        android:id="@+id/ai_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:text="✨ AI"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:elevation="8dp" />
+
+</FrameLayout>
