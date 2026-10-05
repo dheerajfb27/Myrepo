@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<uses-feature android:name="android.software.app_widgets" android:required="true"/>
+<uses-permission android:name="android.permission.SET_WALLPAPER"/>
+<application android:theme="@style/Theme.QuoteGlow" android:label="QuoteGlow Widgets" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher">
+<activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+<receiver android:name=".QuoteWidgetReceiver" android:exported="true"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/quote_widget_info"/></receiver>
+<service android:name=".QuoteLiveWallpaperService" android:permission="android.permission.BIND_WALLPAPER" android:exported="true"><intent-filter><action android:name="android.service.wallpaper.WallpaperService"/></intent-filter><meta-data android:name="android.service.wallpaper" android:resource="@xml/wallpaper"/></service>
+</application></manifest>
