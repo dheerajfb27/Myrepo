@@ -14,6 +14,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import androidx.glance.unit.dp
+import androidx.glance.unit.dp
 
 class QuoteWidget: GlanceAppWidget() {
  override suspend fun provideGlance(context: android.content.Context, id: GlanceId) = provideContent {
