@@ -1,5 +1,7 @@
 package com.quoteglow.widgets
+
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.GlanceAppWidget
@@ -13,14 +15,27 @@ import androidx.glance.layout.padding
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.glance.unit.dp
-import androidx.glance.unit.dp
 
-class QuoteWidget: GlanceAppWidget() {
- override suspend fun provideGlance(context: android.content.Context, id: GlanceId) = provideContent {
-  Box(GlanceModifier.fillMaxSize().background(ColorProvider(Color(0xFF18203A))).padding(16.dp),contentAlignment=Alignment.Center) {
-   Text("Small steps every day lead to big results.",style=TextStyle(color=ColorProvider(Color.White)))
-  }
- }
+class QuoteWidget : GlanceAppWidget() {
+    override suspend fun provideGlance(
+        context: android.content.Context,
+        id: GlanceId
+    ) = provideContent {
+        Box(
+            GlanceModifier
+                .fillMaxSize()
+                .background(ColorProvider(Color(0xFF18203A)))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                "Small steps every day lead to big results.",
+                style = TextStyle(color = ColorProvider(Color.White))
+            )
+        }
+    }
 }
-class QuoteWidgetReceiver:GlanceAppWidgetReceiver(){ override val glanceAppWidget=QuoteWidget() }
+
+class QuoteWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = QuoteWidget()
+}
