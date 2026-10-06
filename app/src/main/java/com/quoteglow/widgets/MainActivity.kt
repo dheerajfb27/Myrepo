@@ -2,6 +2,7 @@ package com.quoteglow.widgets
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.graphics.Color
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -155,8 +156,22 @@ class MainActivity:ComponentActivity(){
   item{Text("Widget style",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(vertical=14.dp))}
   item{Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf("Minimal","Glass","Neon","Gradient").forEach{s->FilterChip(selected=style==s,onClick={style=s;prefs(context).edit().putString(STYLE,s).apply()},label={Text(s)})}}}
   item{Button(onClick={addWidgetToHomeScreen(context,q)},modifier=Modifier.fillMaxWidth().padding(top=20.dp)){Text("Add to Home Screen")}}
-  item{OutlinedButton(onClick={context.startActivity(Intent("android.service.wallpaper.LIVE_WALLPAPER_CHOOSER"))},modifier=Modifier.fillMaxWidth().padding(top=10.dp)){Text("Set QuoteGlow Live Wallpaper")}}
+  item{OutlinedButton(onClick={setQuoteGlowLiveWallpaper(context)},modifier=Modifier.fillMaxWidth().padding(top=10.dp)){Text("Set QuoteGlow Live Wallpaper")}}
   item{Text("Uses official Android widget and wallpaper APIs. No overlays or AccessibilityService.",color=Color(0xFF9FAAD0),modifier=Modifier.padding(vertical=18.dp))}
+ }
+}
+
+fun setQuoteGlowLiveWallpaper(context:Context){
+ try{
+  val component=ComponentName(context,QuoteLiveWallpaperService::class.java)
+  val intent=if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.JELLY_BEAN){
+   Intent(android.app.WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply{
+    putExtra(android.app.WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,component)
+   }
+  }else Intent(android.app.WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)
+  context.startActivity(intent)
+ }catch(e:Exception){
+  context.startActivity(Intent(android.app.WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))
  }
 }
 
