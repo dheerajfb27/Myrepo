@@ -149,7 +149,8 @@ class MainActivity:ComponentActivity(){
 
 @Composable fun WidgetBuilder(pad:PaddingValues,q:Quote,context:Context,onPickWallpaper:()->Unit,onApplyWallpaper:(String,String)->Unit){
  val scope=rememberCoroutineScope()
- var style by remember{mutableStateOf(prefs(context).getString(STYLE,"Glass")?:"Glass")}\n var position by remember{mutableStateOf("Center")}
+ var style by remember{mutableStateOf(prefs(context).getString(STYLE,"Glass")?:"Glass")}
+ var position by remember{mutableStateOf("Center")}
  LazyColumn(Modifier.padding(pad).padding(horizontal=16.dp)){
   item{Header("Widget Builder","Design your home-screen widget")}
   item{Card(shape=RoundedCornerShape(28.dp)){Box(Modifier.fillMaxWidth().height(205.dp).background(
