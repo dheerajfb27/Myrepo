@@ -2,11 +2,11 @@ package com.quoteglow.widgets
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
-import android.graphics.Color
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -184,11 +184,7 @@ fun addWidgetToHomeScreen(context:Context,q:Quote){
    appWidgetManager.requestPinAppWidget(provider,null,null)
    Toast.makeText(context,"Confirm the widget placement on your home screen",Toast.LENGTH_LONG).show()
   }else{
-   val appWidgetId=appWidgetManager.allocateAppWidgetId(provider)
-   val intent=Intent(AppWidgetManager.ACTION_APPWIDGET_PICK).apply{
-    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,appWidgetId)
-   }
-   context.startActivity(intent)
+   Toast.makeText(context,"Long-press your home screen and add QuoteGlow widget.",Toast.LENGTH_LONG).show()
   }
  }catch(e:Exception){
   Toast.makeText(context,"Could not add widget. Long-press your home screen and add QuoteGlow widget.",Toast.LENGTH_LONG).show()
