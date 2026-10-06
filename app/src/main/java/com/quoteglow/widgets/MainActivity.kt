@@ -1,7 +1,10 @@
 package com.quoteglow.widgets
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -151,9 +154,29 @@ class MainActivity:ComponentActivity(){
   }}}
   item{Text("Widget style",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(vertical=14.dp))}
   item{Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf("Minimal","Glass","Neon","Gradient").forEach{s->FilterChip(selected=style==s,onClick={style=s;prefs(context).edit().putString(STYLE,s).apply()},label={Text(s)})}}}
-  item{Button(onClick={saveQuote(context,q);scope.launch{QuoteWidget().updateAll(context)};context.startActivity(Intent("android.appwidget.action.APPWIDGET_PICK"))},modifier=Modifier.fillMaxWidth().padding(top=20.dp)){Text("Add to Home Screen")}}
+  item{Button(onClick={addWidgetToHomeScreen(context,q)},modifier=Modifier.fillMaxWidth().padding(top=20.dp)){Text("Add to Home Screen")}}
   item{OutlinedButton(onClick={context.startActivity(Intent("android.service.wallpaper.LIVE_WALLPAPER_CHOOSER"))},modifier=Modifier.fillMaxWidth().padding(top=10.dp)){Text("Set QuoteGlow Live Wallpaper")}}
   item{Text("Uses official Android widget and wallpaper APIs. No overlays or AccessibilityService.",color=Color(0xFF9FAAD0),modifier=Modifier.padding(vertical=18.dp))}
+ }
+}
+
+fun addWidgetToHomeScreen(context:Context,q:Quote){
+ saveQuote(context,q)
+ try{
+  val appWidgetManager=AppWidgetManager.getInstance(context)
+  val provider=ComponentName(context,QuoteWidgetReceiver::class.java)
+  if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O && appWidgetManager.isRequestPinAppWidgetSupported){
+   appWidgetManager.requestPinAppWidget(provider,null,null)
+   Toast.makeText(context,"Confirm the widget placement on your home screen",Toast.LENGTH_LONG).show()
+  }else{
+   val appWidgetId=appWidgetManager.allocateAppWidgetId(provider)
+   val intent=Intent(AppWidgetManager.ACTION_APPWIDGET_PICK).apply{
+    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,appWidgetId)
+   }
+   context.startActivity(intent)
+  }
+ }catch(e:Exception){
+  Toast.makeText(context,"Could not add widget. Long-press your home screen and add QuoteGlow widget.",Toast.LENGTH_LONG).show()
  }
 }
 
