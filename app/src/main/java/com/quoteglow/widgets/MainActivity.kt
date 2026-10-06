@@ -72,7 +72,46 @@ private fun saveFav(c:Context,q:Quote,value:Boolean){
 private fun saveQuote(c:Context,q:Quote)=prefs(c).edit().putString(SELECTED_QUOTE,q.text).apply()
 
 class MainActivity:ComponentActivity(){
+ private var selectedWallpaperUri:Uri?=null
+ private val wallpaperPicker=registerForActivityResult(ActivityResultContracts.GetContent()){uri->
+  if(uri!=null){selectedWallpaperUri=uri;Toast.makeText(this,"Wallpaper selected",Toast.LENGTH_SHORT).show()}
+ }
  override fun onCreate(state:Bundle?){super.onCreate(state);setContent{QuoteGlowApp(this)}}
+ fun pickWallpaper(){wallpaperPicker.launch("image/*")}
+ fun applySelectedWallpaper(quote:String,position:String,style:String){
+  val uri=selectedWallpaperUri
+  if(uri==null){Toast.makeText(this,"Choose a wallpaper first",Toast.LENGTH_SHORT).show();return}
+  try{
+   val b=BitmapFactory.Options().apply{inJustDecodeBounds=true}
+   contentResolver.openInputStream(uri)?.use{BitmapFactory.decodeStream(it,null,b)}
+   if(b.outWidth<=0||b.outHeight<=0)throw IllegalArgumentException("Invalid image")
+   val sample=calculateSample(b.outWidth,b.outHeight,1080,1920)
+   val source=contentResolver.openInputStream(uri)?.use{BitmapFactory.decodeStream(it,null,BitmapFactory.Options().apply{inSampleSize=sample})}
+     ?:throw IllegalArgumentException("Unable to read image")
+   val output=createQuoteWallpaper(source,quote,position,style);source.recycle()
+   val wm=WallpaperManager.getInstance(this)
+   if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N) wm.setBitmap(output,null,true,WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK) else wm.setBitmap(output)
+   output.recycle();Toast.makeText(this,"Wallpaper applied successfully",Toast.LENGTH_LONG).show()
+  }catch(e:Exception){Toast.makeText(this,"Could not apply wallpaper: ${e.message?: "try another image"}",Toast.LENGTH_LONG).show()}
+ }
+ private fun calculateSample(w:Int,h:Int,tw:Int,th:Int):Int{var s=1;while(w/(s*2)>=tw&&h/(s*2)>=th)s*=2;return s}
+ private fun createQuoteWallpaper(source:Bitmap,quote:String,position:String,style:String):Bitmap{
+  val tw=1080;val th=1920;val out=Bitmap.createBitmap(tw,th,Bitmap.Config.ARGB_8888);val canvas=Canvas(out)
+  val scale=maxOf(tw.toFloat()/source.width,th.toFloat()/source.height);val dw=(source.width*scale).toInt();val dh=(source.height*scale).toInt()
+  canvas.drawBitmap(source,null,android.graphics.Rect((tw-dw)/2,(th-dh)/2,(tw-dw)/2+dw,(th-dh)/2+dh),Paint(Paint.ANTI_ALIAS_FLAG))
+  val p=Paint(Paint.ANTI_ALIAS_FLAG).apply{color=android.graphics.Color.WHITE;textSize=56f;typeface=Typeface.create(Typeface.DEFAULT,Typeface.BOLD);textAlign=Paint.Align.CENTER;setShadowLayer(8f,0f,4f,android.graphics.Color.BLACK)}
+  val lines=wrapQuote(quote,p,tw-140f);val lh=72f;val total=lines.size*lh
+  val base=when(position){"Top"->220f;"Bottom"->th-220f-total;else->(th-total)/2f}
+  when(style){"Glass"->canvas.drawRoundRect(55f,base-85f,tw-55f,base+total+45f,36f,36f,Paint().apply{color=android.graphics.Color.argb(120,0,0,0)})
+   "Gradient"->canvas.drawRect(0f,base-120f,tw.toFloat(),base+total+90f,Paint().apply{color=android.graphics.Color.argb(75,90,24,154)})
+   "Neon"->{p.setShadowLayer(18f,0f,0f,android.graphics.Color.MAGENTA);canvas.drawRoundRect(45f,base-95f,tw-45f,base+total+55f,40f,40f,Paint().apply{style=Paint.Style.STROKE;strokeWidth=5f;color=android.graphics.Color.argb(190,255,79,216)})}}
+  lines.forEachIndexed{i,line->canvas.drawText(line,tw/2f,base+(i+1)*lh,p)};return out
+ }
+ private fun wrapQuote(text:String,p:Paint,maxWidth:Float):List<String>{
+  val words=text.trim().split(Regex("\\s+"));val lines=mutableListOf<String>();var current=""
+  for(word in words){val candidate=if(current.isEmpty())word else "$current $word";if(p.measureText(candidate)<=maxWidth)current=candidate else{if(current.isNotEmpty())lines.add(current);current=word}}
+  if(current.isNotEmpty())lines.add(current);return lines
+ }
 }
 
 @Composable fun QuoteGlowApp(context:Context){
