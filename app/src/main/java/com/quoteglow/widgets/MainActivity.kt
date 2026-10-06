@@ -187,25 +187,26 @@ class MainActivity:ComponentActivity(){
 }
 
 @Composable fun WidgetBuilder(pad:PaddingValues,q:Quote,context:Context,onPickWallpaper:()->Unit,onApplyWallpaper:(String,String)->Unit){
- val scope=rememberCoroutineScope()
  var style by remember{mutableStateOf(prefs(context).getString(STYLE,"Glass")?:"Glass")}
  var position by remember{mutableStateOf("Center")}
  LazyColumn(Modifier.padding(pad).padding(horizontal=16.dp)){
-  item{Header("Widget Builder","Design your home-screen widget")}
+  item{Header("Widget & Wallpaper","Design your quote for your screen")}
   item{Card(shape=RoundedCornerShape(28.dp)){Box(Modifier.fillMaxWidth().height(205.dp).background(
-   when(style){
-    "Neon"->Brush.linearGradient(listOf(Color(0xFF26003D),Color(0xFF001E3D)))
-    "Gradient"->Brush.linearGradient(listOf(Color(0xFF5A189A),Color(0xFF0B7285)))
-    "Minimal"->Brush.linearGradient(listOf(Color(0xFF20242D),Color(0xFF101218)))
-    else->Brush.linearGradient(listOf(Color(0xFF30205C),Color(0xFF102C52)))
-   },RoundedCornerShape(28.dp)).padding(24.dp),contentAlignment=Alignment.Center){
+   when(style){"Neon"->Brush.linearGradient(listOf(Color(0xFF26003D),Color(0xFF001E3D)));"Gradient"->Brush.linearGradient(listOf(Color(0xFF5A189A),Color(0xFF0B7285)));"Minimal"->Brush.linearGradient(listOf(Color(0xFF20242D),Color(0xFF101218)));else->Brush.linearGradient(listOf(Color(0xFF30205C),Color(0xFF102C52)))},RoundedCornerShape(28.dp)).padding(24.dp),contentAlignment=Alignment.Center){
     Column(horizontalAlignment=Alignment.CenterHorizontally){Text(q.text,style=MaterialTheme.typography.headlineSmall,color=Color.White);Text("— "+q.author,color=Color.White.copy(.7f));Text(style.uppercase(),color=Color(0xFFFF8FE9))}
   }}}
   item{Text("Widget style",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(vertical=14.dp))}
-  item{Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf("Minimal","Glass","Neon","Gradient").forEach{s->FilterChip(selected=style==s,onClick={style=s;prefs(context).edit().putString(STYLE,s).apply()},label={Text(s)})}}}
+  item{Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf("Minimal","Glass","Neon","Gradient").forEach{x->FilterChip(selected=style==x,onClick={style=x;prefs(context).edit().putString(STYLE,x).apply()},label={Text(x)})}}}
+  item{Text("Wallpaper",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(top=24.dp,bottom=10.dp))}
+  item{OutlinedButton(onClick=onPickWallpaper,modifier=Modifier.fillMaxWidth()){Text("Choose Wallpaper Image")}}
+  item{Text("Quote position",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(top=16.dp,bottom=8.dp))}
+  item{Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf("Top","Center","Bottom").forEach{x->FilterChip(selected=position==x,onClick={position=x},label={Text(x)})}}}
+  item{Text("Wallpaper quote style",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(top=16.dp,bottom=8.dp))}
+  item{Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf("Minimal","Glass","Neon","Gradient").forEach{x->FilterChip(selected=style==x,onClick={style=x},label={Text(x)})}}}
+  item{Button(onClick={onApplyWallpaper(position,style)},modifier=Modifier.fillMaxWidth().padding(top=16.dp)){Text("Apply Quote to Wallpaper")}}
   item{Button(onClick={addWidgetToHomeScreen(context,q)},modifier=Modifier.fillMaxWidth().padding(top=20.dp)){Text("Add to Home Screen")}}
   item{OutlinedButton(onClick={setQuoteGlowLiveWallpaper(context)},modifier=Modifier.fillMaxWidth().padding(top=10.dp)){Text("Set QuoteGlow Live Wallpaper")}}
-  item{Text("Uses official Android widget and wallpaper APIs. No overlays or AccessibilityService.",color=Color(0xFF9FAAD0),modifier=Modifier.padding(vertical=18.dp))}
+  item{Text("Wallpaper image is selected from your device. QuoteGlow uses Android's official wallpaper API; no overlay or AccessibilityService is used.",color=Color(0xFF9FAAD0),modifier=Modifier.padding(vertical=18.dp))}
  }
 }
 
