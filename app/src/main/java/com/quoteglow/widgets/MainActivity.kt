@@ -6,9 +6,17 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
+import android.net.Uri
+import android.app.WallpaperManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -82,7 +90,7 @@ class MainActivity:ComponentActivity(){
    when(tab){
     0->Home(pad,selected,context,{selected=it;saveQuote(context,it)},{saveQuote(context,selected);tab=2},{tab=1}){refresh++}
     1->Library(pad,context){selected=it;saveQuote(context,it);tab=2}
-    2->WidgetBuilder(pad,selected,context)
+    2->WidgetBuilder(pad,selected,context,{(context as MainActivity).pickWallpaper()},{position,style->(context as MainActivity).applySelectedWallpaper(selected,position,style)})
     3->Favorites(pad,context,refresh){selected=it}
     else->Settings(pad,context,dark){dark=!dark;prefs(context).edit().putBoolean(DARK,dark).apply()}
    }
@@ -139,9 +147,9 @@ class MainActivity:ComponentActivity(){
  }
 }
 
-@Composable fun WidgetBuilder(pad:PaddingValues,q:Quote,context:Context){
+@Composable fun WidgetBuilder(pad:PaddingValues,q:Quote,context:Context,onPickWallpaper:()->Unit,onApplyWallpaper:(String,String)->Unit){
  val scope=rememberCoroutineScope()
- var style by remember{mutableStateOf(prefs(context).getString(STYLE,"Glass")?:"Glass")}
+ var style by remember{mutableStateOf(prefs(context).getString(STYLE,"Glass")?:"Glass")}\n var position by remember{mutableStateOf("Center")}
  LazyColumn(Modifier.padding(pad).padding(horizontal=16.dp)){
   item{Header("Widget Builder","Design your home-screen widget")}
   item{Card(shape=RoundedCornerShape(28.dp)){Box(Modifier.fillMaxWidth().height(205.dp).background(
