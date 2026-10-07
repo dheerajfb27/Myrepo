@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">QuoteGuru</string>
+    <string name="widget_name">QuoteGuru Quote</string>
+    <string name="widget_description">Resizable, multi-shaped quote widget with dark gradients.</string>
+</resources>
