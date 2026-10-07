@@ -3,6 +3,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.glance.action.ActionParameters
 class ShortcutActivity:Activity(){
     override fun onCreate(state:Bundle?){
         super.onCreate(state)
@@ -17,5 +18,5 @@ class ShortcutActivity:Activity(){
         }catch(_:Exception){}
         finish()
     }
-    companion object{const val KEY="shortcut"}
+    companion object{const val KEY="shortcut"; val ACTION_KEY=ActionParameters.Key<String>(KEY)}
 }
