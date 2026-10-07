@@ -246,3 +246,5 @@ class MainActivity:ComponentActivity(){
   }}
  }
 }
+
+// QuoteGlow feature update: resize, repositioning and dark theme controls.
