@@ -28,9 +28,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.launch
 
@@ -64,6 +69,7 @@ private const val STYLE="style"
 private const val SELECTED_QUOTE="selected_quote"
 private const val QUOTE_SIZE="quote_size"
 private const val QUOTE_OFFSET="quote_offset"
+private const val QUOTE_X="quote_x"
 private fun prefs(c:Context)=c.getSharedPreferences(PREFS,Context.MODE_PRIVATE)
 private fun isFav(c:Context,q:Quote)=prefs(c).getStringSet(FAVORITES,emptySet())?.contains(q.text)==true
 private fun saveFav(c:Context,q:Quote,value:Boolean){
@@ -74,13 +80,14 @@ private fun saveFav(c:Context,q:Quote,value:Boolean){
 private fun saveQuote(c:Context,q:Quote)=prefs(c).edit().putString(SELECTED_QUOTE,q.text).apply()
 
 class MainActivity:ComponentActivity(){
- private var selectedWallpaperUri:Uri?=null
+ var selectedWallpaperUri:Uri?=null
+ var wallpaperVersion by mutableIntStateOf(0)
  private val wallpaperPicker=registerForActivityResult(ActivityResultContracts.GetContent()){uri->
-  if(uri!=null){selectedWallpaperUri=uri;Toast.makeText(this,"Wallpaper selected",Toast.LENGTH_SHORT).show()}
+  if(uri!=null){selectedWallpaperUri=uri;wallpaperVersion++;Toast.makeText(this,"Wallpaper selected",Toast.LENGTH_SHORT).show()}
  }
  override fun onCreate(state:Bundle?){super.onCreate(state);setContent{QuoteGlowApp(this)}}
  fun pickWallpaper(){wallpaperPicker.launch("image/*")}
- fun applySelectedWallpaper(quote:String,position:String,style:String,size:Int,offset:Int){
+ fun applySelectedWallpaper(quote:String,position:String,style:String,size:Int,xOffset:Int,yOffset:Int){
   val uri=selectedWallpaperUri
   if(uri==null){Toast.makeText(this,"Choose a wallpaper first",Toast.LENGTH_SHORT).show();return}
   try{
@@ -90,24 +97,25 @@ class MainActivity:ComponentActivity(){
    val sample=calculateSample(b.outWidth,b.outHeight,1080,1920)
    val source=contentResolver.openInputStream(uri)?.use{BitmapFactory.decodeStream(it,null,BitmapFactory.Options().apply{inSampleSize=sample})}
      ?:throw IllegalArgumentException("Unable to read image")
-   val output=createQuoteWallpaper(source,quote,position,style,size,offset);source.recycle()
+   val output=createQuoteWallpaper(source,quote,position,style,size,xOffset,yOffset);source.recycle()
    val wm=WallpaperManager.getInstance(this)
    if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N) wm.setBitmap(output,null,true,WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK) else wm.setBitmap(output)
    output.recycle();Toast.makeText(this,"Wallpaper applied successfully",Toast.LENGTH_LONG).show()
   }catch(e:Exception){Toast.makeText(this,"Could not apply wallpaper: ${e.message?: "try another image"}",Toast.LENGTH_LONG).show()}
  }
  private fun calculateSample(w:Int,h:Int,tw:Int,th:Int):Int{var s=1;while(w/(s*2)>=tw&&h/(s*2)>=th)s*=2;return s}
- private fun createQuoteWallpaper(source:Bitmap,quote:String,position:String,style:String,size:Int,offset:Int):Bitmap{
+ private fun createQuoteWallpaper(source:Bitmap,quote:String,position:String,style:String,size:Int,xOffset:Int,yOffset:Int):Bitmap{
   val tw=1080;val th=1920;val out=Bitmap.createBitmap(tw,th,Bitmap.Config.ARGB_8888);val canvas=Canvas(out)
   val scale=maxOf(tw.toFloat()/source.width,th.toFloat()/source.height);val dw=(source.width*scale).toInt();val dh=(source.height*scale).toInt()
   canvas.drawBitmap(source,null,android.graphics.Rect((tw-dw)/2,(th-dh)/2,(tw-dw)/2+dw,(th-dh)/2+dh),Paint(Paint.ANTI_ALIAS_FLAG))
   val p=Paint(Paint.ANTI_ALIAS_FLAG).apply{color=android.graphics.Color.WHITE;textSize=(56f*size/100f).coerceIn(28f,100f);typeface=Typeface.create(Typeface.DEFAULT,Typeface.BOLD);textAlign=Paint.Align.CENTER;setShadowLayer(8f,0f,4f,android.graphics.Color.BLACK)}
   val lines=wrapQuote(quote,p,tw-140f);val lh=(72f*size/100f).coerceIn(38f,110f);val total=lines.size*lh
-  val base=when(position){"Top"->220f;"Bottom"->th-220f-total;else->(th-total)/2f}+offset.coerceIn(-700,700)
+  val base=when(position){"Top"->220f;"Bottom"->th-220f-total;else->(th-total)/2f}+yOffset.coerceIn(-900,900)
+  val textX=(tw/2f+xOffset.coerceIn(-500,500))
   when(style){"Glass"->canvas.drawRoundRect(55f,base-85f,tw-55f,base+total+45f,36f,36f,Paint().apply{color=android.graphics.Color.argb(120,0,0,0)})
    "Gradient"->canvas.drawRect(0f,base-120f,tw.toFloat(),base+total+90f,Paint().apply{color=android.graphics.Color.argb(75,90,24,154)})
    "Neon"->{p.setShadowLayer(18f,0f,0f,android.graphics.Color.MAGENTA);canvas.drawRoundRect(45f,base-95f,tw-45f,base+total+55f,40f,40f,Paint().apply{this.style=Paint.Style.STROKE;strokeWidth=5f;color=android.graphics.Color.argb(190,255,79,216)})}}
-  lines.forEachIndexed{i,line->canvas.drawText(line,tw/2f,base+(i+1)*lh,p)};return out
+  lines.forEachIndexed{i,line->canvas.drawText(line,textX,base+(i+1)*lh,p)};return out
  }
  private fun wrapQuote(text:String,p:Paint,maxWidth:Float):List<String>{
   val words=text.trim().split(Regex("\\s+"));val lines=mutableListOf<String>();var current=""
@@ -121,6 +129,8 @@ class MainActivity:ComponentActivity(){
  var tab by remember{mutableIntStateOf(0)}
  var selected by remember{mutableStateOf(quotes.first())}
  var refresh by remember{mutableIntStateOf(0)}
+ val activity=context as MainActivity
+ val wallpaperTick=activity.wallpaperVersion
  val scheme=if(dark)darkColorScheme(primary=Color(0xFF8B5CF6),secondary=Color(0xFFFF4FD8),background=Color(0xFF070A18),surface=Color(0xFF11172A))else lightColorScheme(primary=Color(0xFF6750A4))
  MaterialTheme(colorScheme=scheme){
   Scaffold(containerColor=MaterialTheme.colorScheme.background,bottomBar={
@@ -129,9 +139,9 @@ class MainActivity:ComponentActivity(){
    }}
   }){pad->
    when(tab){
-    0->Home(pad,selected,context,{selected=it;saveQuote(context,it)},{saveQuote(context,selected);tab=2},{tab=1}){refresh++}
+    0->Home(pad,selected,context,wallpaperTick,{selected=it;saveQuote(context,it)},{saveQuote(context,selected);tab=2},{tab=1}){refresh++}
     1->Library(pad,context){selected=it;saveQuote(context,it);tab=2}
-    2->WidgetBuilder(pad,selected,context,{(context as MainActivity).pickWallpaper()},{position,style,size,offset->(context as MainActivity).applySelectedWallpaper(selected.text,position,style,size,offset)})
+    2->WidgetBuilder(pad,selected,context,{activity.pickWallpaper()},{position,style,size,offset->activity.applySelectedWallpaper(selected.text,position,style,size,0,offset)})
     3->Favorites(pad,context,refresh){selected=it}
     else->Settings(pad,context,dark){dark=!dark;prefs(context).edit().putBoolean(DARK,dark).apply()}
    }
@@ -159,21 +169,48 @@ class MainActivity:ComponentActivity(){
  }
 }
 
-@Composable fun Home(pad:PaddingValues,q:Quote,context:Context,onQ:(Quote)->Unit,onWidget:()->Unit,onExplore:()->Unit,onFav:()->Unit){
+@Composable fun Home(pad:PaddingValues,q:Quote,context:Context,wallpaperTick:Int,onQ:(Quote)->Unit,onWidget:()->Unit,onExplore:()->Unit,onFav:()->Unit){
+ val activity=context as MainActivity
+ var size by remember{mutableFloatStateOf(prefs(context).getInt(QUOTE_SIZE,100).toFloat())}
+ var x by remember{mutableFloatStateOf(prefs(context).getInt(QUOTE_X,0).toFloat())}
+ var y by remember{mutableFloatStateOf(prefs(context).getInt(QUOTE_OFFSET,0).toFloat())}
+ var style by remember{mutableStateOf(prefs(context).getString(STYLE,"Glass")?:"Glass")}
+ var bitmap by remember(wallpaperTick){mutableStateOf<Bitmap?>(null)}
+ LaunchedEffect(wallpaperTick){
+  activity.selectedWallpaperUri?.let{uri->runCatching{activity.contentResolver.openInputStream(uri)?.use{BitmapFactory.decodeStream(it)}}.onSuccess{bitmap=it}}
+ }
  LazyColumn(Modifier.padding(pad).padding(horizontal=16.dp)){
-  item{Header("QuoteGlow","Quotes that live with you")}
-  item{Card(shape=RoundedCornerShape(26.dp)){Column(Modifier.padding(20.dp)){
-   Text("Today's Quote",color=Color(0xFF9FAAD0));Spacer(Modifier.height(12.dp))
-   Box(Modifier.fillMaxWidth().height(235.dp).background(Brush.linearGradient(listOf(Color(0xFF4A1D64),Color(0xFF123B66),Color(0xFF0C172E))),RoundedCornerShape(22.dp)).padding(24.dp),contentAlignment=Alignment.Center){
-    Column(horizontalAlignment=Alignment.CenterHorizontally){Text(q.text,style=MaterialTheme.typography.headlineSmall,color=Color.White);Spacer(Modifier.height(10.dp));Text("— "+q.author,color=Color.White.copy(.7f))}
+  item{Header("QuoteGlow","Edit your wallpaper directly")}
+  item{
+   Card(shape=RoundedCornerShape(26.dp),modifier=Modifier.fillMaxWidth()){
+    Column(Modifier.padding(12.dp)){
+     Box(Modifier.fillMaxWidth().height(390.dp).background(Color.Black,RoundedCornerShape(22.dp)).pointerInput(Unit){detectDragGestures{_,drag->
+       x=(x+drag.x*1080f/360f).coerceIn(-500f,500f); y=(y+drag.y*1920f/390f).coerceIn(-900f,900f)
+      }} ,contentAlignment=Alignment.Center){
+      if(bitmap!=null) androidx.compose.foundation.Image(bitmap=bitmap!!.asImageBitmap(),contentDescription="Wallpaper",modifier=Modifier.fillMaxSize(),contentScale=androidx.compose.ui.layout.ContentScale.Crop)
+      else Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF30205C),Color(0xFF102C52)))))
+      Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center){
+       Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.offset(x=(x/4f).dp,y=(y/5f).dp)){
+        Text(q.text,fontSize=(25f*size/100f).coerceIn(14f,40f).sp,color=Color.White,fontWeight=FontWeight.Bold)
+        Text("— "+q.author,fontSize=(14f*size/100f).coerceIn(10f,22f).sp,color=Color.White.copy(.75f))
+       }
+      }
+     }
+     Text("Drag the quote to reposition",color=Color(0xFF9FAAD0),modifier=Modifier.padding(top=8.dp))
+     Text("Size: "+size.toInt()+"%",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(top=10.dp))
+     Slider(value=size,onValueChange={size=it},valueRange=50f..160f,steps=21,onValueChangeFinished={prefs(context).edit().putInt(QUOTE_SIZE,size.toInt()).apply()})
+     Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf("Top","Center","Bottom").forEach{p->FilterChip(selected=false,onClick={y=when(p){"Top"->-500f;"Bottom"->500f;else->0f};x=0f;prefs(context).edit().putInt(QUOTE_X,0).putInt(QUOTE_OFFSET,y.toInt()).apply()},label={Text(p)})}}
+     Row(horizontalArrangement=Arrangement.spacedBy(6.dp),modifier=Modifier.padding(top=10.dp)){listOf("Minimal","Glass","Neon","Gradient").forEach{s->FilterChip(selected=style==s,onClick={style=s;prefs(context).edit().putString(STYLE,s).apply()},label={Text(s)})}}
+     Row(horizontalArrangement=Arrangement.spacedBy(8.dp),modifier=Modifier.fillMaxWidth().padding(top=12.dp)){
+      OutlinedButton(onClick={activity.pickWallpaper()},modifier=Modifier.weight(1f)){Text("Wallpaper")}
+      Button(onClick={prefs(context).edit().putInt(QUOTE_SIZE,size.toInt()).putInt(QUOTE_X,x.toInt()).putInt(QUOTE_OFFSET,y.toInt()).apply();activity.applySelectedWallpaper(q.text,"Center",style,size.toInt(),x.toInt(),y.toInt())},modifier=Modifier.weight(1f)){Text("Apply")}
+     }
+    }
    }
-   Row(horizontalArrangement=Arrangement.spacedBy(8.dp),modifier=Modifier.padding(top=14.dp).fillMaxWidth()){
-    Button(onClick=onWidget,modifier=Modifier.weight(1f)){Text("Use as Widget")}
-    OutlinedButton(onClick=onExplore,modifier=Modifier.weight(1f)){Text("Explore")}
-   }
-  }}}
+  }
+  item{Row(horizontalArrangement=Arrangement.spacedBy(8.dp),modifier=Modifier.fillMaxWidth().padding(vertical=12.dp)){Button(onClick=onWidget,modifier=Modifier.weight(1f)){Text("Widgets")};OutlinedButton(onClick=onExplore,modifier=Modifier.weight(1f)){Text("Explore")}}}
   item{Text("Explore Quotes",style=MaterialTheme.typography.titleLarge,modifier=Modifier.padding(16.dp))}
-  items(quotes.take(10)){x->QuoteCard(x,context,{onQ(x)},onFav)}
+  items(quotes.take(10)){xq->QuoteCard(xq,context,{onQ(xq)},onFav)}
  }
 }
 
@@ -214,8 +251,8 @@ class MainActivity:ComponentActivity(){
   item{Text("Wallpaper",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(top=20.dp,bottom=10.dp))}
   item{OutlinedButton(onClick=onPickWallpaper,modifier=Modifier.fillMaxWidth()){Text("Choose Wallpaper Image")}}
   item{Button(onClick={prefs(context).edit().putInt(QUOTE_SIZE,size.toInt()).putInt(QUOTE_OFFSET,offset.toInt()).apply();onApplyWallpaper(position,style,size.toInt(),offset.toInt())},modifier=Modifier.fillMaxWidth().padding(top=16.dp)){Text("Apply Quote to Wallpaper")}}
-  item{Button(onClick=addWidgetToHomeScreen(context,q),modifier=Modifier.fillMaxWidth().padding(top=20.dp)){Text("Add to Home Screen")}}
-  item{OutlinedButton(onClick=setQuoteGlowLiveWallpaper(context),modifier=Modifier.fillMaxWidth().padding(top=10.dp)){Text("Set QuoteGlow Live Wallpaper")}}
+  item{Button(onClick={addWidgetToHomeScreen(context,q)},modifier=Modifier.fillMaxWidth().padding(top=20.dp)){Text("Add to Home Screen")}}
+  item{OutlinedButton(onClick={setQuoteGlowLiveWallpaper(context)},modifier=Modifier.fillMaxWidth().padding(top=10.dp)){Text("Set QuoteGlow Live Wallpaper")}}
   item{Text("Tip: size and position are remembered for your next wallpaper.",color=Color(0xFF9FAAD0),modifier=Modifier.padding(vertical=18.dp))}
  }
 }
