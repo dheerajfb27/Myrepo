@@ -1,4 +1,4 @@
-name: Sun Weather Android APK
+name: Sun Weather Production APK
 
 on:
   workflow_dispatch:
@@ -12,45 +12,45 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: platform-tools
-
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses >/dev/null || true
-
       - name: Install Android SDK 35
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-
-      - name: Build debug APK
+      - name: Create temporary release signing key
         working-directory: sun-weather-android
-        run: gradle --no-daemon assembleDebug
-
+        run: |
+          keytool -genkeypair -v -keystore sunweather-release.jks -alias sunweather             -keyalg RSA -keysize 2048 -validity 3650             -storepass SunWeatherBuild2026 -keypass SunWeatherBuild2026             -dname "CN=Sun Weather, OU=Mobile, O=Sun Weather, L=Bengaluru, ST=Karnataka, C=IN"
+      - name: Build signed release APK
+        working-directory: sun-weather-android
+        env:
+          RELEASE_KEYSTORE: sunweather-release.jks
+          RELEASE_STORE_PASSWORD: SunWeatherBuild2026
+          RELEASE_KEY_PASSWORD: SunWeatherBuild2026
+        run: gradle --no-daemon clean assembleRelease
       - name: Verify APK
         run: |
-          test -f sun-weather-android/app/build/outputs/apk/debug/app-debug.apk
-          ls -lh sun-weather-android/app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Upload APK
+          test -f sun-weather-android/app/build/outputs/apk/release/app-release.apk
+          ls -lh sun-weather-android/app/build/outputs/apk/release/app-release.apk
+          sha256sum sun-weather-android/app/build/outputs/apk/release/app-release.apk
+      - name: Upload production APK
         uses: actions/upload-artifact@v4
         with:
-          name: Sun-Weather-debug-apk
-          path: sun-weather-android/app/build/outputs/apk/debug/app-debug.apk
+          name: Sun-Weather-production-apk
+          path: sun-weather-android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
