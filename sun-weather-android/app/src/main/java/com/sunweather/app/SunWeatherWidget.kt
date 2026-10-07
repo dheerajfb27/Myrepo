@@ -49,10 +49,7 @@ class SunWeatherWidget : GlanceAppWidget() {
             Column(
                 GlanceModifier.fillMaxSize().padding(if (compact) 11.dp else 15.dp)
             ) {
-                Row(
-                    GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top
-                ) {
+                Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                     Column(GlanceModifier.defaultWeight()) {
                         Text(
                             "Today",
@@ -72,10 +69,7 @@ class SunWeatherWidget : GlanceAppWidget() {
                             )
                         )
                     }
-                    Text(
-                        model.icon,
-                        style = TextStyle(fontSize = if (compact) 30.sp else 38.sp)
-                    )
+                    Text(model.icon, style = TextStyle(fontSize = if (compact) 30.sp else 38.sp))
                 }
 
                 Spacer(GlanceModifier.height(if (compact) 5.dp else 9.dp))
@@ -90,61 +84,62 @@ class SunWeatherWidget : GlanceAppWidget() {
                             vertical = if (compact) 9.dp else 13.dp
                         )
                 ) {
-                    Row(
-                        GlanceModifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Column(GlanceModifier.defaultWeight()) {
-                            Text(
-                                model.time,
-                                style = TextStyle(
-                                    color = cp(0xFFF5F7F8),
-                                    fontSize = if (compact) 10.sp else 12.sp
-                                )
-                            )
+                            Text(model.time, style = TextStyle(color = cp(0xFFF5F7F8), fontSize = if (compact) 10.sp else 12.sp))
                             Text(
                                 model.temperature.toString() + "°/" + model.min.toString() + "°",
-                                style = TextStyle(
-                                    color = cp(0xFFFFFFFF),
-                                    fontSize = if (compact) 28.sp else 34.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                style = TextStyle(color = cp(0xFFFFFFFF), fontSize = if (compact) 28.sp else 34.sp, fontWeight = FontWeight.Bold)
                             )
                             Text(
                                 model.condition,
                                 maxLines = 1,
-                                style = TextStyle(
-                                    color = cp(0xFFF1F5F8),
-                                    fontSize = if (compact) 11.sp else 13.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                style = TextStyle(color = cp(0xFFF1F5F8), fontSize = if (compact) 11.sp else 13.sp, fontWeight = FontWeight.Bold)
                             )
                         }
 
-                        Text(
-                            "Weather\nForecast",
-                            style = TextStyle(
-                                color = cp(0xFF20242A),
-                                fontSize = if (compact) 9.sp else 11.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            modifier = GlanceModifier
-                                .background(cp(0xFFF4F6F7))
+                        Box(
+                            GlanceModifier
+                                .background(cp(0xFF54FF86))
                                 .cornerRadius(24.dp)
-                                .padding(
-                                    horizontal = if (compact) 9.dp else 13.dp,
-                                    vertical = if (compact) 7.dp else 10.dp
-                                )
-                        )
+                                .padding(1.dp)
+                        ) {
+                            Box(
+                                GlanceModifier
+                                    .background(cp(0xFF063B20))
+                                    .cornerRadius(23.dp)
+                                    .padding(
+                                        horizontal = if (compact) 10.dp else 14.dp,
+                                        vertical = if (compact) 7.dp else 10.dp
+                                    )
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        "Weather\nForecast",
+                                        style = TextStyle(
+                                            color = cp(0xFFF2FFF6),
+                                            fontSize = if (compact) 9.sp else 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                    Spacer(GlanceModifier.width(7.dp))
+                                    Text(
+                                        "›",
+                                        style = TextStyle(
+                                            color = cp(0xFF7CFF9E),
+                                            fontSize = if (compact) 18.sp else 22.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
                 Spacer(GlanceModifier.height(if (compact) 6.dp else 9.dp))
 
-                Row(
-                    GlanceModifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Row(GlanceModifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     model.forecast.take(3).forEachIndexed { index, day ->
                         val colors = listOf(0xFFF58A00, 0xFF23A8CF, 0xFF8060DD)
                         Box(
@@ -153,36 +148,14 @@ class SunWeatherWidget : GlanceAppWidget() {
                                 .padding(horizontal = 3.dp)
                                 .background(cp(colors[index]))
                                 .cornerRadius(24.dp)
-                                .padding(
-                                    vertical = if (compact) 7.dp else 10.dp,
-                                    horizontal = 3.dp
-                                )
+                                .padding(vertical = if (compact) 7.dp else 10.dp, horizontal = 3.dp)
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = GlanceModifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    day.day,
-                                    style = TextStyle(
-                                        color = cp(0xFF111820),
-                                        fontSize = if (ultraCompact) 9.sp else 11.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                                Text(
-                                    day.icon,
-                                    style = TextStyle(
-                                        fontSize = if (ultraCompact) 17.sp else 23.sp
-                                    )
-                                )
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = GlanceModifier.fillMaxWidth()) {
+                                Text(day.day, style = TextStyle(color = cp(0xFF111820), fontSize = if (ultraCompact) 9.sp else 11.sp, fontWeight = FontWeight.Bold))
+                                Text(day.icon, style = TextStyle(fontSize = if (ultraCompact) 17.sp else 23.sp))
                                 Text(
                                     day.max.toString() + "°/" + day.min.toString() + "°",
-                                    style = TextStyle(
-                                        color = cp(0xFF111820),
-                                        fontSize = if (ultraCompact) 8.sp else 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    style = TextStyle(color = cp(0xFF111820), fontSize = if (ultraCompact) 8.sp else 10.sp, fontWeight = FontWeight.Bold)
                                 )
                             }
                         }
@@ -222,11 +195,7 @@ class SunWeatherWidget : GlanceAppWidget() {
                             ) {
                                 Text(
                                     labels[key] ?: "•",
-                                    style = TextStyle(
-                                        color = cp(0xFFFFFFFF),
-                                        fontSize = 19.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    style = TextStyle(color = cp(0xFFFFFFFF), fontSize = 19.sp, fontWeight = FontWeight.Bold)
                                 )
                             }
                         }
