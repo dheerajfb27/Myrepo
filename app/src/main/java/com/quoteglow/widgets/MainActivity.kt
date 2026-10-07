@@ -235,9 +235,9 @@ class MainActivity:ComponentActivity(){
   item{Card(shape=RoundedCornerShape(28.dp)){Box(Modifier.fillMaxWidth().height(230.dp).background(
    when(style){"Neon"->Brush.linearGradient(listOf(Color(0xFF26003D),Color(0xFF001E3D)));"Gradient"->Brush.linearGradient(listOf(Color(0xFF5A189A),Color(0xFF0B7285)));"Minimal"->Brush.linearGradient(listOf(Color(0xFF20242D),Color(0xFF101218)));else->Brush.linearGradient(listOf(Color(0xFF30205C),Color(0xFF102C52)))},RoundedCornerShape(28.dp)).padding(20.dp),contentAlignment=Alignment.Center){
     Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(6.dp),modifier=Modifier.offset(y=(offset/12).dp)){
-     Text(q.text,fontSize=(24f*size/100f).coerceIn(14f,42f).sp,color=Color.White,fontWeight=FontWeight.Bold)
-     Text("— "+q.author,color=Color.White.copy(.7f),fontSize=(14f*size/100f).coerceIn(10f,22f).sp)
-     Text(style.uppercase(),color=Color(0xFFFF8FE9),fontSize=11.sp)
+     Text(q.text,style=MaterialTheme.typography.titleLarge,color=Color.White,fontWeight=FontWeight.Bold)
+     Text("— "+q.author,color=Color.White.copy(.7f),style=MaterialTheme.typography.bodyMedium)
+     Text(style.uppercase(),color=Color(0xFFFF8FE9),style=MaterialTheme.typography.labelSmall)
     }
   }}}
   item{Text("Quote size: "+size.toInt()+"%",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(top=18.dp,bottom=4.dp))}
@@ -251,8 +251,7 @@ class MainActivity:ComponentActivity(){
   item{Text("Wallpaper",style=MaterialTheme.typography.titleMedium,modifier=Modifier.padding(top=20.dp,bottom=10.dp))}
   item{OutlinedButton(onClick=onPickWallpaper,modifier=Modifier.fillMaxWidth()){Text("Choose Wallpaper Image")}}
   item{Button(onClick={prefs(context).edit().putInt(QUOTE_SIZE,size.toInt()).putInt(QUOTE_OFFSET,offset.toInt()).apply();onApplyWallpaper(position,style,size.toInt(),offset.toInt())},modifier=Modifier.fillMaxWidth().padding(top=16.dp)){Text("Apply Quote to Wallpaper")}}
-  item{Button(onClick={addWidgetToHomeScreen(context,q)},modifier=Modifier.fillMaxWidth().padding(top=20.dp)){Text("Add to Home Screen")}}
-  item{OutlinedButton(onClick={setQuoteGlowLiveWallpaper(context)},modifier=Modifier.fillMaxWidth().padding(top=10.dp)){Text("Set QuoteGlow Live Wallpaper")}}
+
   item{Text("Tip: size and position are remembered for your next wallpaper.",color=Color(0xFF9FAAD0),modifier=Modifier.padding(vertical=18.dp))}
  }
 }
