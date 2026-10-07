@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 class SettingsActivity:ComponentActivity(){
     override fun onCreate(state:Bundle?){
         super.onCreate(state);WeatherWorker.schedule(this)
