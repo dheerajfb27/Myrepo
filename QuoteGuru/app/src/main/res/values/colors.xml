@@ -2,4 +2,5 @@
     <color name="qg_bg">#07131F</color>
     <color name="qg_surface">#102232</color>
     <color name="qg_accent">#52E3FF</color>
+    <color name="qg_white">#FFFFFFFF</color>
 </resources>
