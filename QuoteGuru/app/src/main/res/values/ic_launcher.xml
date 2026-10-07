@@ -1,0 +1,5 @@
+<resources>
+    <style name="QuoteGuruIconText" parent="android:style/TextAppearance.Material">
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
+</resources>
