@@ -9,9 +9,9 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
+import androidx.glance.ImageProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -40,35 +40,31 @@ class QuoteWidget : GlanceAppWidget() {
         val height = size.height.value
         val font = (minOf(width, height) / 9f).coerceIn(12f, 28f).sp
         val authorFont = (font.value * .66f).coerceIn(10f, 19f).sp
-        val radius: Dp = when (settings.shape) {
-            1 -> 1000.dp
-            2 -> 0.dp
-            3 -> 10.dp
-            else -> 24.dp
+
+        val drawable = when (settings.shape) {
+            1 -> if (settings.dark) R.drawable.qg_widget_circle else R.drawable.qg_widget_light_circle
+            2 -> if (settings.dark) R.drawable.qg_widget_rect else R.drawable.qg_widget_light_rect
+            3 -> if (settings.dark) R.drawable.qg_widget_cut else R.drawable.qg_widget_light_cut
+            else -> if (settings.dark) R.drawable.qg_widget_rounded else R.drawable.qg_widget_light_rounded
         }
-        val base = if (settings.dark) ColorProvider(android.graphics.Color.rgb(12, 25, 38))
-                   else ColorProvider(android.graphics.Color.rgb(45, 48, 52))
+        val textColor = if (settings.dark) ColorProvider(R.color.qg_white) else ColorProvider(android.R.color.black)
+
         Box(
-            modifier = GlanceModifier.fillMaxSize().background(base).cornerRadius(radius).padding(16.dp),
+            modifier = GlanceModifier.fillMaxSize()
+                .background(ImageProvider(drawable))
+                .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = GlanceModifier.fillMaxSize()
-                    .background(ColorProvider(android.graphics.Color.argb(70, 44, 83, 100)))
-                    .cornerRadius(radius),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "“${settings.quote}”",
-                        style = TextStyle(color = ColorProvider(android.graphics.Color.WHITE), fontSize = font, fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(GlanceModifier.size(8.dp))
-                    Text(
-                        text = "— ${settings.author}",
-                        style = TextStyle(color = ColorProvider(android.graphics.Color.WHITE), fontSize = authorFont)
-                    )
-                }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "“${settings.quote}”",
+                    style = TextStyle(color = textColor, fontSize = font, fontWeight = FontWeight.Bold)
+                )
+                Spacer(GlanceModifier.size(8.dp))
+                Text(
+                    text = "— ${settings.author}",
+                    style = TextStyle(color = textColor, fontSize = authorFont)
+                )
             }
         }
     }
