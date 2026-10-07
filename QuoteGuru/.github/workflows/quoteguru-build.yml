@@ -5,6 +5,10 @@ on:
     paths:
       - 'QuoteGuru/**'
       - '.github/workflows/quoteguru-build.yml'
+  pull_request:
+    paths:
+      - 'QuoteGuru/**'
+      - '.github/workflows/quoteguru-build.yml'
   workflow_dispatch:
 
 jobs:
