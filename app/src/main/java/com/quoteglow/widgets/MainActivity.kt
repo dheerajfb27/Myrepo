@@ -104,7 +104,7 @@ class MainActivity:ComponentActivity(){
   val base=when(position){"Top"->220f;"Bottom"->th-220f-total;else->(th-total)/2f}
   when(style){"Glass"->canvas.drawRoundRect(55f,base-85f,tw-55f,base+total+45f,36f,36f,Paint().apply{color=android.graphics.Color.argb(120,0,0,0)})
    "Gradient"->canvas.drawRect(0f,base-120f,tw.toFloat(),base+total+90f,Paint().apply{color=android.graphics.Color.argb(75,90,24,154)})
-   "Neon"->{p.setShadowLayer(18f,0f,0f,android.graphics.Color.MAGENTA);canvas.drawRoundRect(45f,base-95f,tw-45f,base+total+55f,40f,40f,Paint().apply{style=Paint.Style.STROKE;strokeWidth=5f;color=android.graphics.Color.argb(190,255,79,216)})}}
+   "Neon"->{p.setShadowLayer(18f,0f,0f,android.graphics.Color.MAGENTA);canvas.drawRoundRect(45f,base-95f,tw-45f,base+total+55f,40f,40f,Paint().apply{this.style=Paint.Style.STROKE;strokeWidth=5f;color=android.graphics.Color.argb(190,255,79,216)})}}
   lines.forEachIndexed{i,line->canvas.drawText(line,tw/2f,base+(i+1)*lh,p)};return out
  }
  private fun wrapQuote(text:String,p:Paint,maxWidth:Float):List<String>{
@@ -129,7 +129,7 @@ class MainActivity:ComponentActivity(){
    when(tab){
     0->Home(pad,selected,context,{selected=it;saveQuote(context,it)},{saveQuote(context,selected);tab=2},{tab=1}){refresh++}
     1->Library(pad,context){selected=it;saveQuote(context,it);tab=2}
-    2->WidgetBuilder(pad,selected,context,{(context as MainActivity).pickWallpaper()},{position,style->(context as MainActivity).applySelectedWallpaper(selected,position,style)})
+    2->WidgetBuilder(pad,selected,context,{(context as MainActivity).pickWallpaper()},{position,style->(context as MainActivity).applySelectedWallpaper(selected.text,position,style)})
     3->Favorites(pad,context,refresh){selected=it}
     else->Settings(pad,context,dark){dark=!dark;prefs(context).edit().putBoolean(DARK,dark).apply()}
    }
