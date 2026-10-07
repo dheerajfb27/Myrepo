@@ -18,7 +18,7 @@ android {
             def kp = System.getenv('RELEASE_KEY_PASSWORD')
             def sp = System.getenv('RELEASE_STORE_PASSWORD')
             if (ks != null && kp != null && sp != null) {
-                storeFile file(ks)
+                storeFile rootProject.file(ks)
                 storePassword sp
                 keyAlias 'sunweather'
                 keyPassword kp
