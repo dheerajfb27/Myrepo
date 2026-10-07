@@ -79,7 +79,7 @@ object WeatherRepository {
             if(days.size==3) break
         }
         val temp=main.optDouble("temp").toInt()
-        return WeatherModel(current.optString("name",city(contextDummy())),date,time,temp,
+        return WeatherModel(current.optString("name",contextDummy()),date,time,temp,
             main.optDouble("temp_min",temp.toDouble()).toInt(),main.optDouble("temp_max",temp.toDouble()).toInt(),
             w.optString("description","Weather").replaceFirstChar{it.uppercase()},iconFor(w.optInt("id",800)),
             main.optDouble("feels_like",temp.toDouble()).toInt(),main.optInt("humidity"),(current.optJSONObject("wind")?.optDouble("speed",0.0)?.times(3.6))?.toInt()?:0,days.values.toList())
