@@ -11,6 +11,7 @@ import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
+import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -52,7 +53,9 @@ class QuoteWidget : GlanceAppWidget() {
             contentAlignment = Alignment.Center
         ) {
             Box(
-                modifier = GlanceModifier.fillMaxSize().background(ColorProvider(android.graphics.Color.argb(70, 44, 83, 100))).cornerRadius(radius),
+                modifier = GlanceModifier.fillMaxSize()
+                    .background(ColorProvider(android.graphics.Color.argb(70, 44, 83, 100)))
+                    .cornerRadius(radius),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
