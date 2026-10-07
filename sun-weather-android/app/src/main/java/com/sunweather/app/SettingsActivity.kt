@@ -36,7 +36,7 @@ class SettingsActivity:ComponentActivity(){
                         listOf("phone" to "Phone","messages" to "Messages","camera" to "Camera","twitter" to "Twitter / X","telegram" to "Telegram","spotify" to "Spotify").forEach{(id,label)->
                             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text(label);Switch(selected.contains(id),{on->selected=selected.toMutableSet().apply{if(on)add(id)else remove(id)}})}
                         }
-                        Button({WeatherRepository.saveSettings(this,key,city,theme,iconSet,selected);WeatherWorker.enqueueNow(this);finish()},Modifier.fillMaxWidth()){Text("Save & refresh widget")}
+                        Button({WeatherRepository.saveSettings(this@SettingsActivity,key,city,theme,iconSet,selected);WeatherWorker.enqueueNow(this@SettingsActivity);finish()},Modifier.fillMaxWidth()){Text("Save & refresh widget")}
                         Text("Without an API key, built-in demo weather is shown until OpenWeather is configured.",style=MaterialTheme.typography.bodySmall)
                     }
                 }
