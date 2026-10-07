@@ -29,7 +29,7 @@ class SunWeatherWidget:GlanceAppWidget(){
         val compact=LocalSize.current.width<380.dp
         val accent=when(theme){"Ocean"->0xFF39B6D8; "Sunset"->0xFFFF8A3D; "Lavender"->0xFF8F6BE8; else->0xFFFFA726}
         Box(GlanceModifier.fillMaxSize().cornerRadius(28.dp)){
-            Image(ImageProvider(R.drawable.weather_scene),"Weather road sunrise background",ContentScale.Crop,GlanceModifier.fillMaxSize())
+            Image(ImageProvider(R.drawable.weather_scene),"Weather road sunrise background",modifier=GlanceModifier.fillMaxSize())
             Column(GlanceModifier.fillMaxSize().padding(14.dp)){
                 Row(GlanceModifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
                     Column(GlanceModifier.defaultWeight()){
@@ -54,7 +54,7 @@ class SunWeatherWidget:GlanceAppWidget(){
                 Row(GlanceModifier.fillMaxWidth(),horizontalAlignment=Alignment.CenterHorizontally){
                     model.forecast.take(3).forEachIndexed{index,day->
                         val colors=listOf(0xFFF57C00,0xFF159BC1,0xFF7D55D8)
-                        Box(GlanceModifier.defaultWeight().padding(horizontal=3.dp).background(ColorProvider(colors[index])).cornerRadius(22.dp).padding(vertical=7.dp,horizontal=4.dp)){
+                        Box(GlanceModifier.defaultWeight().padding(horizontal=3.dp).background(cp(colors[index])).cornerRadius(22.dp).padding(vertical=7.dp,horizontal=4.dp)){
                             Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=GlanceModifier.fillMaxWidth()){
                                 Text(day.day,style=TextStyle(color=cp(0xFF101820),fontSize=if(compact)10.sp else 11.sp,fontWeight=FontWeight.Bold))
                                 Text(day.icon,style=TextStyle(fontSize=if(compact)18.sp else 21.sp))
@@ -73,7 +73,7 @@ class SunWeatherWidget:GlanceAppWidget(){
                     }
                 }
                 Text(model.city+"  •  "+model.humidity+"% humidity  •  "+model.wind+" km/h",
-                    style=TextStyle(color=ColorProvider(accent),fontSize=9.sp,fontWeight=FontWeight.Bold),
+                    style=TextStyle(color=cp(accent),fontSize=9.sp,fontWeight=FontWeight.Bold),
                     modifier=GlanceModifier.padding(top=5.dp).clickable(actionStartActivity<SettingsActivity>()))
             }
         }
