@@ -1,1 +1,5 @@
-<resources><string name="app_name">Sun Weather</string></resources>
+<resources>
+    <string name="app_name">Sun Weather Widgets</string>
+    <string name="widget_name">Sun Weather</string>
+    <string name="widget_description">Stylized live weather dashboard with forecast and customizable shortcuts.</string>
+</resources>
