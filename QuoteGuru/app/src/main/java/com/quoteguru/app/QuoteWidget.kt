@@ -20,8 +20,8 @@ import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
-import androidx.glance.unit.sp
+import androidx.glance.unit.ColorProvider\nimport androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 class QuoteWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -48,9 +48,9 @@ class QuoteWidget : GlanceAppWidget() {
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("“${settings.quote}”", TextStyle(color = textColor, fontSize = fontSize, fontWeight = FontWeight.Bold))
+                Text(text = "“${settings.quote}”", style = TextStyle(color = textColor, fontSize = fontSize, fontWeight = FontWeight.Bold))
                 Spacer(GlanceModifier.size(8.dp))
-                Text("— ${settings.author}", TextStyle(color = textColor, fontSize = authorFontSize))
+                Text(text = "— ${settings.author}", style = TextStyle(color = textColor, fontSize = authorFontSize))
             }
         }
     }
