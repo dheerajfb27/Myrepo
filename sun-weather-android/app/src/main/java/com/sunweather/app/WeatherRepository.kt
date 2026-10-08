@@ -19,6 +19,7 @@ object WeatherRepository {
     private const val THEME="theme"
     private const val ICON_SET="icon_set"
     private const val SHORTCUTS="shortcuts"
+    private const val UNIT="unit"
     private const val MODEL="model"
 
     fun prefs(context:Context)=context.getSharedPreferences(PREFS,Context.MODE_PRIVATE)
@@ -26,11 +27,12 @@ object WeatherRepository {
     fun city(context:Context)=prefs(context).getString(CITY,"Bengaluru")?:"Bengaluru"
     fun theme(context:Context)=prefs(context).getString(THEME,"Sunrise")?:"Sunrise"
     fun iconSet(context:Context)=prefs(context).getString(ICON_SET,"Colorful")?:"Colorful"
+    fun unit(context:Context)=prefs(context).getString(UNIT,"C")?:"C"
     fun shortcuts(context:Context):Set<String> = prefs(context).getStringSet(SHORTCUTS,defaultShortcuts())?:defaultShortcuts()
 
-    fun saveSettings(context:Context,key:String,city:String,theme:String,iconSet:String,shortcuts:Set<String>){
+    fun saveSettings(context:Context,key:String,city:String,theme:String,iconSet:String,unit:String,shortcuts:Set<String>){
         prefs(context).edit().putString(KEY,key.trim()).putString(CITY,city.trim().ifBlank{"Bengaluru"})
-            .putString(THEME,theme).putString(ICON_SET,iconSet).putStringSet(SHORTCUTS,shortcuts).apply()
+            .putString(THEME,theme).putString(ICON_SET,iconSet).putString(UNIT,unit).putStringSet(SHORTCUTS,shortcuts).apply()
     }
     fun defaultShortcuts()=linkedSetOf("phone","messages","camera","twitter","telegram","spotify")
 
@@ -39,7 +41,7 @@ object WeatherRepository {
         if(city.isBlank()) return ApiTestResult(false,"City is empty")
         return try{
             val q=URLEncoder.encode(city.trim(),"UTF-8")
-            val c=URL("https://api.openweathermap.org/data/2.5/weather?q="+q+"&units=metric&appid="+key.trim())
+            val c=URL("https://api.openweathermap.org/data/2.5/weather?q="+q+"&units="+(if(unit=="F")"imperial" else "metric")+"&appid="+key.trim())
                 .openConnection() as HttpURLConnection
             c.connectTimeout=10000
             c.readTimeout=10000
@@ -74,7 +76,7 @@ object WeatherRepository {
         }
         return try{
             val q=URLEncoder.encode(city(context),"UTF-8")
-            val current=getJson("https://api.openweathermap.org/data/2.5/weather?q="+q+"&units=metric&appid="+key)
+            val current=getJson("https://api.openweathermap.org/data/2.5/weather?q="+q+"&units="+(if(unit(context)=="F")"imperial" else "metric")+"&appid="+key)
             val forecast=getJson("https://api.openweathermap.org/data/2.5/forecast?q="+q+"&units=metric&appid="+key)
             prefs(context).edit().putString(MODEL,JSONObject(toMap(parse(current,forecast))).toString()).apply()
             true
