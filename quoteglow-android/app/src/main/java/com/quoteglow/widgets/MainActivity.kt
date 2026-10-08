@@ -118,7 +118,7 @@ class MainActivity:ComponentActivity(){
   lines.forEachIndexed{i,line->canvas.drawText(line,textX,base+(i+1)*lh,p)};return out
  }
  private fun wrapQuote(text:String,p:Paint,maxWidth:Float):List<String>{
-  val words=text.trim().split(Regex("\s+"));val lines=mutableListOf<String>();var current=""
+  val words=text.trim().split(Regex("\\s+"));val lines=mutableListOf<String>();var current=""
   for(word in words){val candidate=if(current.isEmpty())word else "$current $word";if(p.measureText(candidate)<=maxWidth)current=candidate else{if(current.isNotEmpty())lines.add(current);current=word}}
   if(current.isNotEmpty())lines.add(current);return lines
  }
