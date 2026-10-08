@@ -11,6 +11,8 @@ import java.util.Date
 import java.util.Locale
 
 object WeatherRepository {
+    data class ApiTestResult(val ok:Boolean,val message:String)
+
     private const val PREFS="sun_weather"
     private const val KEY="openweather_key"
     private const val CITY="city"
@@ -32,9 +34,36 @@ object WeatherRepository {
     }
     fun defaultShortcuts()=linkedSetOf("phone","messages","camera","twitter","telegram","spotify")
 
+    fun testApiKey(key:String,city:String):ApiTestResult{
+        if(key.isBlank()) return ApiTestResult(false,"API key is empty")
+        if(city.isBlank()) return ApiTestResult(false,"City is empty")
+        return try{
+            val q=URLEncoder.encode(city.trim(),"UTF-8")
+            val c=URL("https://api.openweathermap.org/data/2.5/weather?q="+q+"&units=metric&appid="+key.trim())
+                .openConnection() as HttpURLConnection
+            c.connectTimeout=10000
+            c.readTimeout=10000
+            c.requestMethod="GET"
+            val code=c.responseCode
+            val body=(if(code in 200..299)c.inputStream else c.errorStream)?.bufferedReader()?.use{it.readText()}?:""
+            when(code){
+                200->ApiTestResult(true,"API Connected ✓")
+                401->ApiTestResult(false,"Invalid or inactive API key")
+                404->ApiTestResult(false,"City not found")
+                429->ApiTestResult(false,"API rate limit exceeded")
+                else->{
+                    val msg=try{JSONObject(body).optString("message")}catch(_:Exception){"")
+                    ApiTestResult(false,if(msg.isNotBlank())"API error ($code): $msg" else "API error (HTTP $code)")
+                }
+            }
+        }catch(_:Exception){
+            ApiTestResult(false,"Network error — check internet connection")
+        }
+    }
+
     fun loadModel(context:Context):WeatherModel{
         val raw=prefs(context).getString(MODEL,null)
-        return try{ if(raw==null) demo() else fromJson(JSONObject(raw)) }catch(_:Exception){ demo() }
+        return try{if(raw==null)demo() else fromJson(JSONObject(raw))}catch(_:Exception){demo()}
     }
 
     fun refresh(context:Context):Boolean{
@@ -74,9 +103,9 @@ object WeatherRepository {
             if(day==SimpleDateFormat("EEE",Locale.getDefault()).format(now)) continue
             val m=item.getJSONObject("main");val iw=item.getJSONArray("weather").getJSONObject(0)
             val old=days[day]
-            if(old==null) days[day]=ForecastDay(day,iconFor(iw.optInt("id",800)),m.optDouble("temp_max").toInt(),m.optDouble("temp_min").toInt())
+            if(old==null)days[day]=ForecastDay(day,iconFor(iw.optInt("id",800)),m.optDouble("temp_max").toInt(),m.optDouble("temp_min").toInt())
             else days[day]=old.copy(max=maxOf(old.max,m.optDouble("temp_max").toInt()),min=minOf(old.min,m.optDouble("temp_min").toInt()))
-            if(days.size==3) break
+            if(days.size==3)break
         }
         val temp=main.optDouble("temp").toInt()
         return WeatherModel(current.optString("name",contextDummy()),date,time,temp,
