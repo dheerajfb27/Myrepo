@@ -36,7 +36,7 @@ object WeatherRepository {
     }
     fun defaultShortcuts()=linkedSetOf("phone","messages","camera","twitter","telegram","spotify")
 
-    fun testApiKey(key:String,city:String):ApiTestResult{
+    fun testApiKey(key:String,city:String,unit:String="C"):ApiTestResult{
         if(key.isBlank()) return ApiTestResult(false,"API key is empty")
         if(city.isBlank()) return ApiTestResult(false,"City is empty")
         return try{
