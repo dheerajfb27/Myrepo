@@ -11,7 +11,6 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 public final class ApiKeyStore {
     private static final String PREFS = "docucraft_secure";
@@ -41,7 +40,7 @@ public final class ApiKeyStore {
                     .getString(VALUE_NAME, null);
             if (value == null || !value.contains(".")) return null;
 
-            String[] parts = value.split("\.", 2);
+            String[] parts = value.split("\\.", 2);
             byte[] iv = Base64.decode(parts[0], Base64.NO_WRAP);
             byte[] encrypted = Base64.decode(parts[1], Base64.NO_WRAP);
 
