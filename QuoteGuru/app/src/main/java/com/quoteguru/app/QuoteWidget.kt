@@ -34,7 +34,7 @@ class QuoteWidget : GlanceAppWidget() {
     @Composable
     private fun QuoteWidgetContent(settings: QuoteSettings) {
         val size = LocalSize.current
-        val fontSize = (minOf(size.width.value, size.height.value) / 9f).coerceIn(12f, 28f).toInt().sp
+        val fontSize = ((minOf(size.width.value, size.height.value) / 9f).coerceIn(12f, 28f)).sp
         val authorFontSize = (fontSize.value * 0.66f).coerceIn(10f, 19f).toInt().sp
         val drawable = when (settings.shape) {
             1 -> if (settings.dark) R.drawable.qg_widget_circle else R.drawable.qg_widget_light_circle
