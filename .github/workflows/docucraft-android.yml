@@ -42,3 +42,11 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/zipalign" -f 4 app/build/outputs/apk/release/app-release-unsigned.apk /tmp/docucraft-aligned.apk
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign --ks /tmp/docucraft-release.jks --ks-pass pass:docucraft --key-pass pass:docucraft --out app/build/outputs/apk/release/docucraft-ai.apk /tmp/docucraft-aligned.apk
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/docucraft-ai.apk
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: docucraft-ai-apk
+          path: docucraft-android/app/build/outputs/apk/release/docucraft-ai.apk
+          if-no-files-found: error
+          retention-days: 90
