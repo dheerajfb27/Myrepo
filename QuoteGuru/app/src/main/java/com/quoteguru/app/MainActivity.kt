@@ -57,41 +57,75 @@ private fun QuoteGuruScreen() {
                     }
                     Switch(checked = dark, onCheckedChange = { dark = it })
                 }
+
                 QuotePreview(
                     quote.ifBlank { "Your quote goes here." },
-                    author.ifBlank { "Author" }, dark, shape,
+                    author.ifBlank { "Author" },
+                    dark,
+                    shape,
                     Modifier.fillMaxWidth().height(220.dp)
                 )
-                OutlinedTextField(value = quote, onValueChange = { quote = it }, label = { Text("Quote") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
-                OutlinedTextField(value = author, onValueChange = { author = it }, label = { Text("Author") }, modifier = Modifier.fillMaxWidth())
+
+                OutlinedTextField(
+                    value = quote,
+                    onValueChange = { quote = it },
+                    label = { Text("Quote") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2
+                )
+                OutlinedTextField(
+                    value = author,
+                    onValueChange = { author = it },
+                    label = { Text("Author") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Text("Shape", color = text, fontWeight = FontWeight.Bold)
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     listOf("Rounded", "Circle", "Rectangle", "Cut").forEachIndexed { i, label ->
-                        FilterChip(selected = shape == i, onClick = { shape = i }, label = { Text(label) })
+                        FilterChip(
+                            selected = shape == i,
+                            onClick = { shape = i },
+                            label = { Text(label) }
+                        )
                     }
                 }
+
                 Text("Built-in quotes", color = text, fontWeight = FontWeight.Bold)
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     listOf(
                         "Dream big and dare to fail." to "Norman Vaughan",
                         "Believe you can and you're halfway there." to "Theodore Roosevelt",
                         "The future depends on what you do today." to "Mahatma Gandhi"
                     ).forEach { item ->
-                        TextButton(onClick = { quote = item.first; author = item.second }) { Text(item.first.take(18) + "…") }
+                        TextButton(onClick = { quote = item.first; author = item.second }) {
+                            Text(item.first.take(18) + "…")
+                        }
                     }
                 }
+
                 Button(
-                    Modifier.fillMaxWidth().height(54.dp),
                     onClick = {
                         scope.launch {
                             QuotePrefs.save(context, QuoteSettings(quote, author, dark, shape))
                             QuoteWidget().updateAll(context)
                         }
-                    }
-                ) { Text("Save & Update Widget", fontWeight = FontWeight.Bold) }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(54.dp)
+                ) {
+                    Text("Save & Update Widget", fontWeight = FontWeight.Bold)
+                }
+
                 Text(
                     "Add QuoteGuru from the launcher widget picker. Resize it freely in portrait or landscape.",
-                    color = text.copy(alpha = .55f), textAlign = TextAlign.Center,
+                    color = text.copy(alpha = .55f),
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -100,18 +134,39 @@ private fun QuoteGuruScreen() {
 }
 
 @Composable
-private fun QuotePreview(quote: String, author: String, dark: Boolean, shape: Int, modifier: Modifier) {
-    val colors = if (dark) listOf(Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364))
-    else listOf(Color(0xFFFF3CAC), Color(0xFF784BA0), Color(0xFF2B86C5))
+private fun QuotePreview(
+    quote: String,
+    author: String,
+    dark: Boolean,
+    shape: Int,
+    modifier: Modifier
+) {
+    val colors = if (dark) {
+        listOf(Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364))
+    } else {
+        listOf(Color(0xFFFF3CAC), Color(0xFF784BA0), Color(0xFF2B86C5))
+    }
+
     val clipShape = when (shape) {
         1 -> CircleShape
         2 -> RoundedCornerShape(0.dp)
         3 -> CutCornerShape(22.dp)
         else -> RoundedCornerShape(24.dp)
     }
-    Box(modifier.clip(clipShape).background(Brush.linearGradient(colors)).padding(24.dp), contentAlignment = Alignment.Center) {
+
+    Box(
+        modifier.clip(clipShape).background(Brush.linearGradient(colors)).padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("“$quote”", color = Color.White, fontSize = 23.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(
+                "“$quote”",
+                color = Color.White,
+                fontSize = 23.sp,
+                lineHeight = 29.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
             Spacer(Modifier.height(12.dp))
             Text("— $author", color = Color.White.copy(alpha = .92f), fontSize = 17.sp)
         }
