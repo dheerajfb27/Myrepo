@@ -55,7 +55,7 @@ class SunWeatherWidget : GlanceAppWidget() {
         val cardHeight = when {
             tiny -> 62.dp
             large -> 88.dp
-            else -> 70.dp
+            else -> 74.dp
         }
         val forecastHeight = when {
             tiny -> 70.dp
@@ -117,14 +117,17 @@ class SunWeatherWidget : GlanceAppWidget() {
                     .cornerRadius(if (tiny) 21.dp else 27.dp)
                     .padding(
                         horizontal = if (tiny) 9.dp else if (large) 15.dp else 11.dp,
-                        vertical = if (tiny) 5.dp else 7.dp
+                        vertical = if (tiny) 4.dp else if (large) 6.dp else 4.dp
                     )
             ) {
                 Row(
                     GlanceModifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(GlanceModifier.defaultWeight()) {
+                    Column(
+                        GlanceModifier.defaultWeight().fillMaxHeight(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             "Today",
                             style = TextStyle(
@@ -137,7 +140,7 @@ class SunWeatherWidget : GlanceAppWidget() {
                             model.temperature.toString() + "°" + model.min.toString() + "°",
                             style = TextStyle(
                                 color = cp(0xFFFFFFFF),
-                                fontSize = if (tiny) 22.sp else if (large) 37.sp else 29.sp,
+                                fontSize = if (tiny) 22.sp else if (large) 37.sp else 27.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )
