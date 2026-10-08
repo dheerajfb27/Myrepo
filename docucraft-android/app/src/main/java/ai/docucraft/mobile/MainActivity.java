@@ -3,6 +3,7 @@ package ai.docucraft.mobile;
 import android.content.*;
 import android.graphics.*;
 import android.graphics.pdf.PdfDocument;
+import android.net.Uri;
 import androidx.core.content.FileProvider;
 import android.os.*;
 import android.view.*;
