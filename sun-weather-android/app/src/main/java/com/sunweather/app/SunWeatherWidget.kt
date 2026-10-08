@@ -71,7 +71,7 @@ class SunWeatherWidget : GlanceAppWidget() {
                             )
                     ) {
                         Text(
-                            "Today",
+                            SimpleDateFormat("EEE, d MMM yyyy", Locale.getDefault()).format(Date()),
                             style = TextStyle(
                                 color = cp(0xFF07111A),
                                 fontSize = if (tiny) 17.sp else if (large) 27.sp else 22.sp,
