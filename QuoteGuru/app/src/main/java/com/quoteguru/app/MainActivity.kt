@@ -111,7 +111,7 @@ private fun QuotePreview(quote: String, author: String, dark: Boolean, shape: In
     }
     Box(modifier.clip(clipShape).background(Brush.linearGradient(colors)).padding(24.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(""$quote"", color = Color.White, fontSize = 23.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text("“$quote”", color = Color.White, fontSize = 23.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             Spacer(Modifier.height(12.dp))
             Text("— $author", color = Color.White.copy(alpha = .92f), fontSize = 17.sp)
         }
