@@ -137,7 +137,7 @@ class SunWeatherWidget : GlanceAppWidget() {
                             )
                         )
                         Text(
-                            model.temperature.toString() + "°" + model.min.toString() + "°",
+                            model.temperature.toString() + "°",
                             style = TextStyle(
                                 color = cp(0xFFFFFFFF),
                                 fontSize = if (tiny) 22.sp else if (large) 37.sp else 27.sp,
