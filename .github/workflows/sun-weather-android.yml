@@ -3,6 +3,8 @@ name: Sun Weather Production APK
 on:
   workflow_dispatch:
   push:
+    branches:
+      - sun-weather-isolated
     paths:
       - 'sun-weather-android/**'
       - '.github/workflows/sun-weather-android.yml'
