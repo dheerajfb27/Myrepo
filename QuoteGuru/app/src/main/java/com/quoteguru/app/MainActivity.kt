@@ -62,12 +62,12 @@ private fun QuoteGuruScreen() {
                     author.ifBlank { "Author" }, dark, shape,
                     Modifier.fillMaxWidth().height(220.dp)
                 )
-                OutlinedTextField(quote, { quote = it }, label = { Text("Quote") }, Modifier.fillMaxWidth(), minLines = 2)
-                OutlinedTextField(author, { author = it }, label = { Text("Author") }, Modifier.fillMaxWidth())
+                OutlinedTextField(value = quote, onValueChange = { quote = it }, label = { Text("Quote") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                OutlinedTextField(value = author, onValueChange = { author = it }, label = { Text("Author") }, modifier = Modifier.fillMaxWidth())
                 Text("Shape", color = text, fontWeight = FontWeight.Bold)
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("Rounded", "Circle", "Rectangle", "Cut").forEachIndexed { i, label ->
-                        FilterChip(shape == i, { shape = i }, label = { Text(label) })
+                        FilterChip(selected = shape == i, onClick = { shape = i }, label = { Text(label) })
                     }
                 }
                 Text("Built-in quotes", color = text, fontWeight = FontWeight.Bold)
