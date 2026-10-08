@@ -39,6 +39,7 @@ class SunWeatherWidget : GlanceAppWidget() {
         val model = WeatherRepository.loadModel(context)
         val size = LocalSize.current
         val tiny = size.width < 360.dp || size.height < 195.dp
+        // Isolated production build trigger: 2026-10-08
         val large = size.width >= 500.dp
 
         val outerPad = when {
