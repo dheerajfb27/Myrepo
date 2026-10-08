@@ -202,7 +202,7 @@ class SunWeatherWidget : GlanceAppWidget() {
                                         fontWeight = FontWeight.Bold
                                     )
                                 )
-                            )
+                            }
                             Spacer(GlanceModifier.width(if (tiny) 4.dp else 7.dp))
                             Text(
                                 "›",
