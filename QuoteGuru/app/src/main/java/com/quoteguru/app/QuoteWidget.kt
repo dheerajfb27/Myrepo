@@ -3,8 +3,6 @@ package com.quoteguru.app
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.LocalSize
@@ -36,11 +34,8 @@ class QuoteWidget : GlanceAppWidget() {
     @Composable
     private fun QuoteWidgetContent(settings: QuoteSettings) {
         val size = LocalSize.current
-        val width = size.width.value
-        val height = size.height.value
-        val font = (minOf(width, height) / 9f).coerceIn(12f, 28f).sp
-        val authorFont = (font.value * .66f).coerceIn(10f, 19f).sp
-
+        val fontSize = (minOf(size.width.value, size.height.value) / 9f).coerceIn(12f, 28f).toInt().sp
+        val authorFontSize = (fontSize.value * 0.66f).coerceIn(10f, 19f).toInt().sp
         val drawable = when (settings.shape) {
             1 -> if (settings.dark) R.drawable.qg_widget_circle else R.drawable.qg_widget_light_circle
             2 -> if (settings.dark) R.drawable.qg_widget_rect else R.drawable.qg_widget_light_rect
@@ -48,23 +43,14 @@ class QuoteWidget : GlanceAppWidget() {
             else -> if (settings.dark) R.drawable.qg_widget_rounded else R.drawable.qg_widget_light_rounded
         }
         val textColor = if (settings.dark) ColorProvider(R.color.qg_white) else ColorProvider(android.R.color.black)
-
         Box(
-            modifier = GlanceModifier.fillMaxSize()
-                .background(ImageProvider(drawable))
-                .padding(16.dp),
+            GlanceModifier.fillMaxSize().background(ImageProvider(drawable)).padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "“${settings.quote}”",
-                    style = TextStyle(color = textColor, fontSize = font, fontWeight = FontWeight.Bold)
-                )
+                Text("“${settings.quote}”", TextStyle(color = textColor, fontSize = fontSize, fontWeight = FontWeight.Bold))
                 Spacer(GlanceModifier.size(8.dp))
-                Text(
-                    text = "— ${settings.author}",
-                    style = TextStyle(color = textColor, fontSize = authorFont)
-                )
+                Text("— ${settings.author}", TextStyle(color = textColor, fontSize = authorFontSize))
             }
         }
     }
