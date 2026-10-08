@@ -64,3 +64,5 @@ jobs:
             Native Android app with resizable, multi-shaped quote widget.
           files: QuoteGuru/app/build/outputs/apk/debug/QuoteGuru.apk
           generate_release_notes: true
+
+# trigger build verification
