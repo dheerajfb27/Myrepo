@@ -158,6 +158,24 @@ class SunWeatherWidget : GlanceAppWidget() {
                     // Real pill, not a rectangular button.
                     Box(
                         GlanceModifier
+                            .width(if (tiny) 42.dp else if (large) 62.dp else 50.dp)
+                            .height(if (tiny) 42.dp else if (large) 58.dp else 48.dp)
+                            .cornerRadius(50.dp)
+                            .background(cp(0xFF101820)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "🌤️",
+                            style = TextStyle(
+                                fontSize = if (tiny) 22.sp else if (large) 31.sp else 25.sp
+                            )
+                        )
+                    }
+
+                    Spacer(GlanceModifier.width(if (tiny) 4.dp else if (large) 8.dp else 6.dp))
+
+                    Box(
+                        GlanceModifier
                             .width(if (tiny) 91.dp else if (large) 140.dp else 112.dp)
                             .height(if (tiny) 42.dp else if (large) 58.dp else 48.dp)
                             .background(cp(0xFF54FF86))
