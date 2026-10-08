@@ -1,5 +1,10 @@
 name: QuoteGlow Android APK
 on:
+  push:
+    branches: [ quoteglow-android ]
+    paths:
+      - 'quoteglow-android/**'
+      - '.github/workflows/build-android.yml'
   workflow_dispatch:
 
 jobs:
@@ -36,11 +41,12 @@ jobs:
           gradle-version: '8.10'
 
       - name: Build debug APK
+        working-directory: quoteglow-android
         run: gradle :app:assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: QuoteGlow-Widgets-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: quoteglow-android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
