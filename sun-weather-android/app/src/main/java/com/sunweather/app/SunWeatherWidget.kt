@@ -137,7 +137,7 @@ class SunWeatherWidget : GlanceAppWidget() {
                             )
                         )
                         Text(
-                            model.temperature.toString() + "°",
+                            model.temperature.toString() + "°" + WeatherRepository.unit(context),
                             style = TextStyle(
                                 color = cp(0xFFFFFFFF),
                                 fontSize = if (tiny) 22.sp else if (large) 37.sp else 27.sp,
@@ -265,7 +265,7 @@ class SunWeatherWidget : GlanceAppWidget() {
                                     )
                                 )
                                 Text(
-                                    day.max.toString() + "°/" + day.min.toString() + "°",
+                                    day.max.toString() + "°/" + day.min.toString() + "°" + WeatherRepository.unit(context),
                                     style = TextStyle(
                                         color = cp(0xFF111820),
                                         fontSize = if (tiny) 7.sp else if (large) 10.sp else 8.sp,
