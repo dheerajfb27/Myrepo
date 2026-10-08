@@ -1,1 +1,0 @@
-<TextView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="Small steps every day lead to big results." android:textColor="#FFFFFF" android:padding="16dp" android:background="#18203A"/>
