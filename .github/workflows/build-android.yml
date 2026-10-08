@@ -1,7 +1,5 @@
 name: QuoteGlow Android APK
 on:
-  push:
-    branches: [ quoteglow-android ]
   workflow_dispatch:
 
 jobs:
