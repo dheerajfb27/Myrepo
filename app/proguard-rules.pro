@@ -1,1 +1,0 @@
-# QuoteGlow release rules
