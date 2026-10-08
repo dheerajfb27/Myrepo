@@ -7,9 +7,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.*
-import androidx.glance.action.actionParametersOf
-import androidx.glance.action.actionStartActivity
-import androidx.glance.action.clickable
 import androidx.glance.appwidget.*
 import androidx.glance.color.ColorProvider
 import androidx.glance.layout.*
@@ -40,216 +37,236 @@ class SunWeatherWidget : GlanceAppWidget() {
     private fun WidgetContent() {
         val context = LocalContext.current
         val model = WeatherRepository.loadModel(context)
-        val shortcuts = WeatherRepository.shortcuts(context)
-        val w = LocalSize.current.width
-        val h = LocalSize.current.height
-        val tiny = w < 360.dp || h < 195.dp
-        val medium = w < 500.dp
-        val large = w >= 500.dp
-        val pad = if (tiny) 4.dp else if (medium) 7.dp else 9.dp
+        val size = LocalSize.current
+        val tiny = size.width < 360.dp || size.height < 195.dp
+        val large = size.width >= 500.dp
+
+        val outerPad = when {
+            tiny -> 4.dp
+            large -> 9.dp
+            else -> 7.dp
+        }
+        val topHeight = when {
+            tiny -> 28.dp
+            large -> 40.dp
+            else -> 32.dp
+        }
+        val cardHeight = when {
+            tiny -> 62.dp
+            large -> 88.dp
+            else -> 70.dp
+        }
+        val forecastHeight = when {
+            tiny -> 70.dp
+            large -> 140.dp
+            else -> 88.dp
+        }
+        val clockWidth = when {
+            tiny -> 68.dp
+            large -> 145.dp
+            else -> 72.dp
+        }
 
         val clock = SimpleDateFormat("hh:mm\na", Locale.getDefault()).format(Date())
 
-        Box(GlanceModifier.fillMaxSize().padding(pad)) {
-            Column(GlanceModifier.fillMaxSize()) {
+        Column(
+            GlanceModifier.fillMaxSize().padding(outerPad),
+            verticalAlignment = Alignment.Top
+        ) {
+            // Top reference pill.
+            Row(
+                GlanceModifier.fillMaxWidth().height(topHeight),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    GlanceModifier
+                        .background(cp(0xFF2CB9F5))
+                        .cornerRadius(50.dp)
+                        .padding(
+                            horizontal = if (tiny) 11.dp else if (large) 18.dp else 14.dp,
+                            vertical = 3.dp
+                        )
+                ) {
+                    Text(
+                        "Today",
+                        style = TextStyle(
+                            color = cp(0xFF07111A),
+                            fontSize = if (tiny) 16.sp else if (large) 25.sp else 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+                Spacer(GlanceModifier.defaultWeight())
+                Text(
+                    model.icon,
+                    style = TextStyle(
+                        fontSize = if (tiny) 25.sp else if (large) 43.sp else 33.sp
+                    )
+                )
+            }
 
-                // Exact reference: blue Today pill and weather icon.
+            Spacer(GlanceModifier.height(if (tiny) 2.dp else 4.dp))
+
+            // Main weather card.
+            Box(
+                GlanceModifier
+                    .fillMaxWidth()
+                    .height(cardHeight)
+                    .background(cp(0xF51A202B))
+                    .cornerRadius(if (tiny) 21.dp else 27.dp)
+                    .padding(
+                        horizontal = if (tiny) 9.dp else if (large) 15.dp else 11.dp,
+                        vertical = if (tiny) 5.dp else 7.dp
+                    )
+            ) {
                 Row(
-                    GlanceModifier.fillMaxWidth()
-                        .height(if (tiny) 30.dp else if (large) 44.dp else 36.dp),
+                    GlanceModifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        GlanceModifier
-                            .background(cp(0xFF2CB9F5))
-                            .cornerRadius(26.dp)
-                            .padding(
-                                horizontal = if (tiny) 12.dp else if (large) 19.dp else 15.dp,
-                                vertical = if (tiny) 4.dp else if (large) 7.dp else 5.dp
-                            )
-                    ) {
+                    Column(GlanceModifier.defaultWeight()) {
                         Text(
                             "Today",
                             style = TextStyle(
-                                color = cp(0xFF07111A),
-                                fontSize = if (tiny) 18.sp else if (large) 28.sp else 23.sp,
+                                color = cp(0xFFE8EDF3),
+                                fontSize = if (tiny) 8.sp else if (large) 13.sp else 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                        Text(
+                            model.temperature.toString() + "°" + model.min.toString() + "°",
+                            style = TextStyle(
+                                color = cp(0xFFFFFFFF),
+                                fontSize = if (tiny) 22.sp else if (large) 37.sp else 29.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                        Text(
+                            model.condition,
+                            maxLines = 1,
+                            style = TextStyle(
+                                color = cp(0xFFF3F5F8),
+                                fontSize = if (tiny) 8.sp else if (large) 13.sp else 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )
                     }
-                    Spacer(GlanceModifier.defaultWeight())
+
+                    // Real pill, not a rectangular button.
+                    Box(
+                        GlanceModifier
+                            .width(if (tiny) 91.dp else if (large) 140.dp else 112.dp)
+                            .height(if (tiny) 42.dp else if (large) 58.dp else 48.dp)
+                            .background(cp(0xFF54FF86))
+                            .cornerRadius(50.dp)
+                            .padding(1.dp)
+                    ) {
+                        Row(
+                            GlanceModifier
+                                .fillMaxSize()
+                                .background(cp(0xFF063B20))
+                                .cornerRadius(50.dp)
+                                .padding(horizontal = if (tiny) 7.dp else 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Weather\nForecast",
+                                style = TextStyle(
+                                    color = cp(0xFFF3FFF6),
+                                    fontSize = if (tiny) 7.sp else if (large) 12.sp else 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                            Spacer(GlanceModifier.defaultWeight())
+                            Text(
+                                "›",
+                                style = TextStyle(
+                                    color = cp(0xFF7CFF9E),
+                                    fontSize = if (tiny) 17.sp else if (large) 22.sp else 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(GlanceModifier.height(if (tiny) 3.dp else if (large) 6.dp else 4.dp))
+
+            // Lower row is intentionally non-overlapping so all three forecast pills
+            // remain visible at every supported resize tier.
+            Row(
+                GlanceModifier.fillMaxWidth().height(forecastHeight),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    GlanceModifier.width(clockWidth).fillMaxHeight(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        model.icon,
+                        clock,
                         style = TextStyle(
-                            fontSize = if (tiny) 28.sp else if (large) 47.sp else 37.sp
+                            color = cp(0xFF080C12),
+                            fontSize = if (tiny) 22.sp else if (large) 40.sp else 25.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     )
                 }
 
-                Spacer(GlanceModifier.height(if (tiny) 2.dp else 4.dp))
+                Spacer(GlanceModifier.width(if (tiny) 2.dp else 4.dp))
 
-                // Reference composition: card is the top layer; clock and forecast cards
-                // sit in the lower layer and visually tuck underneath/alongside it.
-                Box(
-                    GlanceModifier.fillMaxWidth().defaultWeight()
+                Row(
+                    GlanceModifier.defaultWeight().fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        GlanceModifier
-                            .fillMaxWidth()
-                            .height(if (tiny) 70.dp else if (large) 110.dp else 90.dp)
-                            .background(cp(0xF51A202B))
-                            .cornerRadius(if (tiny) 23.dp else 30.dp)
-                            .padding(
-                                horizontal = if (tiny) 10.dp else if (large) 16.dp else 12.dp,
-                                vertical = if (tiny) 6.dp else if (large) 11.dp else 8.dp
-                            )
-                    ) {
-                        Row(
-                            GlanceModifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(GlanceModifier.defaultWeight()) {
-                                Text(
-                                    "Today",
-                                    style = TextStyle(
-                                        color = cp(0xFFE8EDF3),
-                                        fontSize = if (tiny) 8.sp else if (large) 14.sp else 11.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                                Text(
-                                    model.temperature.toString() + "°" + model.min.toString() + "°",
-                                    style = TextStyle(
-                                        color = cp(0xFFFFFFFF),
-                                        fontSize = if (tiny) 24.sp else if (large) 40.sp else 32.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                                Text(
-                                    model.condition,
-                                    maxLines = 1,
-                                    style = TextStyle(
-                                        color = cp(0xFFF3F5F8),
-                                        fontSize = if (tiny) 9.sp else if (large) 14.sp else 11.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                            }
-
-                            Box(
-                                GlanceModifier
-                                    .width(if (tiny) 94.dp else if (large) 145.dp else 118.dp)
-                                    .background(cp(0xFF54FF86))
-                                    .cornerRadius(26.dp)
-                                    .padding(1.dp)
-                            ) {
-                                Row(
-                                    GlanceModifier
-                                        .fillMaxWidth()
-                                        .background(cp(0xFF063B20))
-                                        .cornerRadius(25.dp)
-                                        .padding(
-                                            horizontal = if (tiny) 8.dp else if (large) 14.dp else 10.dp,
-                                            vertical = if (tiny) 5.dp else if (large) 8.dp else 6.dp
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        "Weather\nForecast",
-                                        style = TextStyle(
-                                            color = cp(0xFFF3FFF6),
-                                            fontSize = if (tiny) 8.sp else if (large) 13.sp else 10.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    )
-                                    Spacer(GlanceModifier.defaultWeight())
-                                    Text(
-                                        "›",
-                                        style = TextStyle(
-                                            color = cp(0xFF7CFF9E),
-                                            fontSize = if (tiny) 17.sp else if (large) 23.sp else 19.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Lower layer: clock left, three tall cards right.
-                    if (!tiny) {
-                        Row(
+                    val colors = listOf(0xFFFF9800, 0xFF20AEE8, 0xFF9060E8)
+                    val days = model.forecast.take(3)
+                    repeat(3) { i ->
+                        val day = days.getOrNull(i) ?: ForecastDay(
+                            listOf("Mon", "Tue", "Wed")[i],
+                            listOf("⛅", "🌦", "🌧")[i],
+                            model.max,
+                            model.min
+                        )
+                        Box(
                             GlanceModifier
-                                .fillMaxWidth()
-                                .padding(top = if (large) 94.dp else 76.dp)
-                                .height(if (large) 142.dp else 118.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .defaultWeight()
+                                .fillMaxHeight()
+                                .padding(horizontal = if (large) 2.dp else 1.dp)
+                                .background(cp(colors[i]))
+                                .cornerRadius(if (large) 23.dp else 18.dp)
+                                .padding(vertical = if (large) 8.dp else 5.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                GlanceModifier
-                                    .width(if (large) 185.dp else 145.dp)
-                                    .fillMaxHeight(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    clock,
-                                    style = TextStyle(
-                                        color = cp(0xFF080C12),
-                                        fontSize = if (large) 43.sp else 36.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                            }
-
-                            Row(
-                                GlanceModifier
-                                    .fillMaxHeight()
-                                    .defaultWeight(),
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                model.forecast.take(3).forEachIndexed { i, day ->
-                                    val colors = listOf(0xFFFF9800, 0xFF20AEE8, 0xFF9060E8)
-                                    Box(
-                                        GlanceModifier
-                                            .defaultWeight()
-                                            .fillMaxHeight()
-                                            .padding(horizontal = if (large) 2.dp else 1.dp)
-                                            .background(cp(colors[i]))
-                                            .cornerRadius(if (large) 25.dp else 20.dp)
-                                            .padding(
-                                                vertical = if (large) 9.dp else 7.dp,
-                                                horizontal = 1.dp
-                                            )
-                                    ) {
-                                        Column(
-                                            GlanceModifier.fillMaxSize(),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(day.day, style = TextStyle(
-                                                color = cp(0xFF111820),
-                                                fontSize = if (large) 13.sp else 10.sp,
-                                                fontWeight = FontWeight.Bold
-                                            ))
-                                            Text(day.icon, style = TextStyle(
-                                                fontSize = if (large) 28.sp else 21.sp
-                                            ))
-                                            Text(day.max.toString() + "°/" + day.min.toString() + "°",
-                                                style = TextStyle(
-                                                    color = cp(0xFF111820),
-                                                    fontSize = if (large) 10.sp else 8.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                ))
-                                        }
-                                    }
-                                }
+                                Text(
+                                    day.day,
+                                    style = TextStyle(
+                                        color = cp(0xFF111820),
+                                        fontSize = if (tiny) 9.sp else if (large) 13.sp else 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                                Text(
+                                    day.icon,
+                                    style = TextStyle(
+                                        fontSize = if (tiny) 18.sp else if (large) 27.sp else 20.sp
+                                    )
+                                )
+                                Text(
+                                    day.max.toString() + "°/" + day.min.toString() + "°",
+                                    style = TextStyle(
+                                        color = cp(0xFF111820),
+                                        fontSize = if (tiny) 7.sp else if (large) 10.sp else 8.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
                             }
                         }
                     }
-                }
-
-                if (tiny && shortcuts.isNotEmpty()) {
-                    Spacer(GlanceModifier.height(3.dp))
                 }
             }
         }
