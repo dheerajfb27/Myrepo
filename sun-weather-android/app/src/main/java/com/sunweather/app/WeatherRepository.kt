@@ -52,7 +52,7 @@ object WeatherRepository {
                 404->ApiTestResult(false,"City not found")
                 429->ApiTestResult(false,"API rate limit exceeded")
                 else->{
-                    val msg=try{JSONObject(body).optString("message")}catch(_:Exception){"")
+                    val msg=try{JSONObject(body).optString("message")}catch(_:Exception){""}
                     ApiTestResult(false,if(msg.isNotBlank())"API error ($code): $msg" else "API error (HTTP $code)")
                 }
             }
