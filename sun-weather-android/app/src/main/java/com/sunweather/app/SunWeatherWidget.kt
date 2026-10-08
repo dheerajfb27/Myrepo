@@ -216,7 +216,6 @@ class SunWeatherWidget : GlanceAppWidget() {
 
                 Row(
                     GlanceModifier.defaultWeight().fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val colors = listOf(0xFFFF9800, 0xFF20AEE8, 0xFF9060E8)
