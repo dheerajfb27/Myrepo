@@ -172,15 +172,20 @@ class SunWeatherWidget : GlanceAppWidget() {
                                 .padding(horizontal = if (tiny) 7.dp else 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                "Weather\nForecast",
-                                style = TextStyle(
-                                    color = cp(0xFFF3FFF6),
-                                    fontSize = if (tiny) 7.sp else if (large) 12.sp else 9.sp,
-                                    fontWeight = FontWeight.Bold
+                            Box(
+                                GlanceModifier.defaultWeight().fillMaxHeight(),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    "Weather\nForecast",
+                                    style = TextStyle(
+                                        color = cp(0xFFF3FFF6),
+                                        fontSize = if (tiny) 7.sp else if (large) 12.sp else 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 )
                             )
-                            Spacer(GlanceModifier.defaultWeight())
+                            Spacer(GlanceModifier.width(if (tiny) 4.dp else 7.dp))
                             Text(
                                 "›",
                                 style = TextStyle(
