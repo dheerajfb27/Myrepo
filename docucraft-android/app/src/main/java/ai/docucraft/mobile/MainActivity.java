@@ -1,248 +1,37 @@
 package ai.docucraft.mobile;
 
-import android.app.DownloadManager;
 import android.content.*;
+import android.graphics.*;
+import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.*;
-import android.text.InputType;
-import android.view.View;
-import android.webkit.*;
+import android.view.*;
 import android.widget.*;
-import androidx.activity.OnBackPressedCallback;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import java.io.*;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String APP_URL = "https://docucraft-ai.hatchable.site";
-    private static final int FILE_CHOOSER_REQUEST = 4101;
-
-    private WebView webView;
-    private SwipeRefreshLayout refreshLayout;
-    private ValueCallback<Uri[]> filePathCallback;
-
-    @Override protected void onCreate(Bundle b) {
-        super.onCreate(b);
-        setContentView(R.layout.activity_main);
-
-        refreshLayout = findViewById(R.id.refresh_layout);
-        webView = findViewById(R.id.web_view);
-        Button aiButton = findViewById(R.id.ai_button);
-
-        configureWebView();
-        refreshLayout.setOnRefreshListener(() -> webView.reload());
-        webView.setDownloadListener((url, ua, cd, mime, len) -> download(url, ua, cd, mime));
-
-        if (b == null) webView.loadUrl(APP_URL);
-        else webView.restoreState(b);
-
-        aiButton.setOnClickListener(v -> showAiDialog());
-
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            public void handleOnBackPressed() {
-                if (webView.canGoBack()) webView.goBack(); else finish();
-            }
-        });
+    LinearLayout content; final int BG=Color.rgb(10,12,18),CARD=Color.rgb(25,28,40),WHITE=Color.WHITE,MUTED=Color.rgb(175,180,198),ACCENT=Color.rgb(124,92,255);
+    @Override public void onCreate(Bundle b){super.onCreate(b);shell();home();}
+    void shell(){
+        LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(BG);
+        ScrollView sv=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(18),dp(16),dp(18),dp(12));sv.addView(content);root.addView(sv,new LinearLayout.LayoutParams(-1,0,1));
+        LinearLayout nav=new LinearLayout(this);nav.setBackgroundColor(CARD);
+        nav.addView(nav("Home",v->home()));nav.addView(nav("Resume",v->resume()));nav.addView(nav("PPT",v->ppt()));nav.addView(nav("Settings",v->settings()));
+        root.addView(nav,new LinearLayout.LayoutParams(-1,dp(62)));setContentView(root);
     }
-
-    private void configureWebView() {
-        WebSettings s = webView.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setDatabaseEnabled(true);
-        s.setAllowFileAccess(true);
-        s.setAllowContentAccess(true);
-        s.setJavaScriptCanOpenWindowsAutomatically(true);
-        s.setMediaPlaybackRequiresUserGesture(false);
-        s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        CookieManager.getInstance().setAcceptCookie(true);
-        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
-        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-
-        webView.setWebViewClient(new WebViewClient() {
-            @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
-                Uri u = r.getUrl();
-                String h = u.getHost();
-                if (h != null && (h.equals("docucraft-ai.hatchable.site") || h.endsWith(".hatchable.site")))
-                    return false;
-                try { startActivity(new Intent(Intent.ACTION_VIEW, u)); return true; }
-                catch (Exception e) { return false; }
-            }
-            @Override public void onPageFinished(WebView v, String u) {
-                refreshLayout.setRefreshing(false);
-            }
-        });
-
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams p) {
-                if (filePathCallback != null) filePathCallback.onReceiveValue(null);
-                filePathCallback = cb;
-                try {
-                    startActivityForResult(p.createIntent(), FILE_CHOOSER_REQUEST);
-                    return true;
-                } catch (Exception e) {
-                    filePathCallback = null;
-                    return false;
-                }
-            }
-        });
-    }
-
-    private void showAiDialog() {
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        int pad = dp(20);
-        box.setPadding(pad, dp(8), pad, 0);
-
-        EditText key = new EditText(this);
-        key.setHint("Groq API key");
-        key.setSingleLine(true);
-        key.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        String saved = ApiKeyStore.load(this);
-        if (saved != null) key.setText(saved);
-
-        EditText prompt = new EditText(this);
-        prompt.setHint("Ask DocuCraft AI to create or improve something...");
-        prompt.setGravity(android.view.Gravity.TOP);
-        prompt.setMinLines(5);
-        prompt.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        prompt.setText("Create an ATS-friendly professional summary for a Salesforce QA Lead with 11+ years of experience.");
-
-        box.addView(key, new LinearLayout.LayoutParams(-1, dp(58)));
-        box.addView(prompt, new LinearLayout.LayoutParams(-1, dp(150)));
-
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("DocuCraft AI • Groq")
-                .setView(box)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Generate", null)
-                .create();
-
-        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            String apiKey = key.getText().toString().trim();
-            String userPrompt = prompt.getText().toString().trim();
-
-            if (apiKey.isEmpty()) {
-                key.setError("Enter your Groq API key");
-                return;
-            }
-            if (userPrompt.isEmpty()) {
-                prompt.setError("Enter a prompt");
-                return;
-            }
-
-            try {
-                ApiKeyStore.save(this, apiKey);
-            } catch (Exception e) {
-                Toast.makeText(this, "Could not securely save the API key", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            dialog.dismiss();
-            showGenerating();
-            GroqApiClient.generate(apiKey, userPrompt, new GroqApiClient.Callback() {
-                @Override public void onSuccess(String text) {
-                    runOnUiThread(() -> showResult(text));
-                }
-                @Override public void onError(String message) {
-                    runOnUiThread(() -> {
-                        Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
-                    });
-                }
-            });
-        }));
-
-        dialog.show();
-    }
-
-    private void showGenerating() {
-        Toast.makeText(this, "DocuCraft AI is generating…", Toast.LENGTH_SHORT).show();
-    }
-
-    private void showResult(String text) {
-        ScrollView scroll = new ScrollView(this);
-        TextView result = new TextView(this);
-        result.setText(text);
-        result.setTextIsSelectable(true);
-        result.setTextSize(16);
-        result.setPadding(dp(20), dp(12), dp(20), dp(20));
-        scroll.addView(result);
-
-        new AlertDialog.Builder(this)
-                .setTitle("DocuCraft AI Result")
-                .setView(scroll)
-                .setPositiveButton("Done", null)
-                .setNeutralButton("Copy", (d, w) -> {
-                    ((android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE))
-                            .setPrimaryClip(android.content.ClipData.newPlainText("DocuCraft AI", text));
-                    Toast.makeText(this, "Copied", Toast.LENGTH_SHORT).show();
-                })
-                .show();
-    }
-
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
-
-    private void download(String url, String ua, String cd, String mime) {
-        try {
-            DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url));
-            r.setMimeType(mime);
-            r.addRequestHeader("User-Agent", ua);
-            String c = CookieManager.getInstance().getCookie(url);
-            if (c != null) r.addRequestHeader("Cookie", c);
-            r.setTitle("DocuCraft AI download");
-            r.setDescription("Downloading generated file");
-            r.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            r.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, guessName(cd, mime));
-            ((DownloadManager)getSystemService(DOWNLOAD_SERVICE)).enqueue(r);
-            Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
-            catch (Exception ignored) {}
-        }
-    }
-
-    private String guessName(String cd, String mime) {
-        if (cd != null && cd.contains("filename=")) {
-            String n = cd.substring(cd.indexOf("filename=") + 9).replace("\"", "").trim();
-            if (!n.isEmpty()) return n;
-        }
-        if ("application/pdf".equalsIgnoreCase(mime)) return "DocuCraft-document.pdf";
-        if (mime != null && mime.contains("wordprocessingml")) return "DocuCraft-resume.docx";
-        if (mime != null && mime.contains("presentationml")) return "DocuCraft-presentation.pptx";
-        return "DocuCraft-download";
-    }
-
-    @Override protected void onActivityResult(int req, int result, @Nullable Intent data) {
-        super.onActivityResult(req, result, data);
-        if (req == FILE_CHOOSER_REQUEST && filePathCallback != null) {
-            Uri[] r = null;
-            if (result == RESULT_OK && data != null) {
-                if (data.getClipData() != null) {
-                    int n = data.getClipData().getItemCount();
-                    r = new Uri[n];
-                    for (int i = 0; i < n; i++) r[i] = data.getClipData().getItemAt(i).getUri();
-                } else if (data.getData() != null) {
-                    r = new Uri[]{data.getData()};
-                }
-            }
-            filePathCallback.onReceiveValue(r);
-            filePathCallback = null;
-        }
-    }
-
-    @Override protected void onSaveInstanceState(Bundle out) {
-        webView.saveState(out);
-        super.onSaveInstanceState(out);
-    }
-
-    @Override protected void onDestroy() {
-        if (webView != null) {
-            webView.stopLoading();
-            webView.destroy();
-        }
-        super.onDestroy();
-    }
+    Button nav(String s,View.OnClickListener l){Button b=new Button(this);b.setText(s);b.setTextColor(WHITE);b.setAllCaps(false);b.setBackgroundColor(Color.TRANSPARENT);b.setOnClickListener(l);b.setLayoutParams(new LinearLayout.LayoutParams(0,-1,1));return b;}
+    void clear(String h,String sub){content.removeAllViews();TextView t=label(h,27,WHITE);t.setTypeface(null,1);content.addView(t);content.addView(label(sub,14,MUTED));}
+    void home(){clear("DocuCraft AI","Native Android document & presentation studio");card(label("Create smarter documents",21,WHITE),label("No WebView. Native screens, native navigation, secure local key storage and direct AI integration.",14,MUTED),action("Create ATS Resume",v->resume()),action("Create Presentation",v->ppt()));content.addView(label("Native capabilities\n• ATS resume generation\n• Presentation outlines\n• Secure Android Keystore\n• Native PDF export\n• Local result storage",15,MUTED));}
+    void resume(){clear("AI Resume Builder","Build an ATS-focused resume from your real experience");EditText profile=field("Profile / existing resume facts",6),jd=field("Target job description",6),skills=field("Skills, certifications, achievements",4);content.addView(profile);content.addView(jd);content.addView(skills);content.addView(action("Generate ATS Resume",v->{String p=profile.getText().toString(),j=jd.getText().toString(),s=skills.getText().toString();if(p.trim().isEmpty()||j.trim().isEmpty()){toast("Add profile and target JD");return;}generate("Create a professional ATS-friendly resume. Use only supplied facts and never invent experience. Return Summary, Skills, Experience, Education and Certifications.\nTARGET JD:\n"+j+"\nPROFILE:\n"+p+"\nSKILLS:\n"+s);}));}
+    void ppt(){clear("AI Presentation Builder","Turn an idea into a slide-ready presentation");EditText topic=field("Presentation topic / brief",6),aud=field("Audience",2);content.addView(topic);content.addView(aud);content.addView(action("Generate Presentation Outline",v->{if(topic.getText().toString().trim().isEmpty()){toast("Enter a topic");return;}generate("Create a slide-ready presentation outline for: "+topic.getText()+"\nAudience: "+aud.getText()+". Include title, agenda, slide-by-slide content, speaker notes and suggested visuals.");}));}
+    void settings(){clear("Settings","Local configuration");EditText key=field("Groq API key",1);String k=ApiKeyStore.load(this);if(k!=null)key.setText(k);key.setInputType(0x81);content.addView(key);content.addView(action("Save API key securely",v->{try{ApiKeyStore.save(this,key.getText().toString().trim());toast("Saved securely");}catch(Exception e){toast("Could not save key");}}));content.addView(action("Clear API key",v->{ApiKeyStore.clear(this);key.setText("");toast("Cleared");}));}
+    void generate(String prompt){String key=ApiKeyStore.load(this);if(key==null||key.trim().isEmpty()){settings();toast("Save your Groq API key first");return;}ProgressBar p=new ProgressBar(this);content.addView(p);GroqApiClient.generate(key,prompt,new GroqApiClient.Callback(){public void onSuccess(String r){runOnUiThread(()->{p.setVisibility(View.GONE);getPreferences(0).edit().putString("last_result",r).apply();result(r);});}public void onError(String e){runOnUiThread(()->{p.setVisibility(View.GONE);toast(e);});}});}
+    void result(String r){clear("Generated Result","Native AI output");content.addView(card(label(r,15,WHITE),action("Export PDF",v->pdf(r)),action("Copy",v->{((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("DocuCraft",r));toast("Copied");}))); }
+    void pdf(String body){try{File f=new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),"DocuCraft-result.pdf");PdfDocument d=new PdfDocument();int page=1,y=45;PdfDocument.Page pg=d.startPage(new PdfDocument.PageInfo.Builder(612,792,page).create());Paint p=new Paint();p.setColor(Color.BLACK);p.setTextSize(11);for(String line:body.replace("\r","").split("\\n")){if(y>755){d.finishPage(pg);pg=d.startPage(new PdfDocument.PageInfo.Builder(612,792,++page).create());y=45;}pg.getCanvas().drawText(line.length()>95?line.substring(0,95):line,36,y,p);y+=17;}d.finishPage(pg);FileOutputStream o=new FileOutputStream(f);d.writeTo(o);o.close();d.close();Intent i=new Intent(Intent.ACTION_SEND);i.setType("application/pdf");i.putExtra(Intent.EXTRA_STREAM,Uri.parse("file://"+f.getAbsolutePath()));startActivity(Intent.createChooser(i,"Share PDF"));}catch(Exception e){toast("PDF export failed");}}
+    EditText field(String h,int lines){EditText e=new EditText(this);e.setHint(h);e.setHintTextColor(MUTED);e.setTextColor(WHITE);e.setTextSize(15);e.setMinLines(lines);e.setGravity(Gravity.TOP);e.setPadding(dp(12),dp(10),dp(12),dp(10));e.setBackgroundColor(CARD);LinearLayout.LayoutParams q=new LinearLayout.LayoutParams(-1,lines>1?dp(120):dp(58));q.setMargins(0,dp(5),0,dp(8));e.setLayoutParams(q);return e;}
+    Button action(String s,View.OnClickListener l){Button b=new Button(this);b.setText(s);b.setTextColor(WHITE);b.setAllCaps(false);b.setBackgroundColor(ACCENT);b.setOnClickListener(l);LinearLayout.LayoutParams q=new LinearLayout.LayoutParams(-1,dp(52));q.setMargins(0,dp(5),0,dp(7));b.setLayoutParams(q);return b;}
+    LinearLayout card(View...v){LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.VERTICAL);l.setPadding(dp(15),dp(15),dp(15),dp(15));l.setBackgroundColor(CARD);for(View x:v)l.addView(x);content.addView(l);return l;}
+    TextView label(String s,float z,int c){TextView t=new TextView(this);t.setText(s);t.setTextSize(z);t.setTextColor(c);t.setPadding(0,dp(5),0,dp(5));return t;}
+    int dp(int n){return Math.round(n*getResources().getDisplayMetrics().density);}void toast(String s){Toast.makeText(this,s,Toast.LENGTH_LONG).show();}
 }
