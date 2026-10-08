@@ -27,6 +27,7 @@ class SettingsActivity:ComponentActivity(){
                 var city by remember{mutableStateOf(WeatherRepository.city(this))}
                 var theme by remember{mutableStateOf(WeatherRepository.theme(this))}
                 var iconSet by remember{mutableStateOf(WeatherRepository.iconSet(this))}
+                var unit by remember{mutableStateOf(WeatherRepository.unit(this))}
                 var selected by remember{mutableStateOf(WeatherRepository.shortcuts(this))}
                 var testing by remember{mutableStateOf(false)}
                 var apiStatus by remember{mutableStateOf<WeatherRepository.ApiTestResult?>(null)}
@@ -93,6 +94,13 @@ class SettingsActivity:ComponentActivity(){
                             }
                         }
 
+                        Text("Temperature unit",style=MaterialTheme.typography.titleMedium)
+                        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+                            listOf("C" to "Celsius (°C)","F" to "Fahrenheit (°F)").forEach{(id,label)->
+                                FilterChip(unit==id,{unit=id},{Text(label)})
+                            }
+                        }
+
                         Text("Weather icon set",style=MaterialTheme.typography.titleMedium)
                         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
                             listOf("Colorful","Minimal").forEach{
@@ -122,7 +130,7 @@ class SettingsActivity:ComponentActivity(){
                         Button(
                             onClick={
                                 WeatherRepository.saveSettings(
-                                    this@SettingsActivity,key,city,theme,iconSet,selected
+                                    this@SettingsActivity,key,city,theme,iconSet,unit,selected
                                 )
                                 WeatherWorker.enqueueNow(this@SettingsActivity)
                                 finish()
