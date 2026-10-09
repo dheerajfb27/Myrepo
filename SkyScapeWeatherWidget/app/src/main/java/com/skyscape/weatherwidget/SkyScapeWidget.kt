@@ -23,8 +23,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.glance.unit.dp
-import androidx.glance.unit.sp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 class SkyScapeWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -46,7 +46,7 @@ private fun WidgetContent(weather: WeatherSnapshot) {
         Column(modifier = GlanceModifier.defaultWeight()) {
             Text("🌳  🐦  ☁️", style = TextStyle(color = ColorProvider(Color.rgb(228, 242, 249)), fontSize = 22.sp))
             Spacer(GlanceModifier.height(5.dp))
-            Text("SkyScape · ${weather.location}", style = TextStyle(color = ColorProvider(Color.White), fontSize = 14.sp, fontWeight = FontWeight.Bold))
+            Text("SkyScape · ${weather.location}", style = TextStyle(color = ColorProvider(Color.WHITE), fontSize = 14.sp, fontWeight = FontWeight.Bold))
             Text(weather.description, style = TextStyle(color = ColorProvider(Color.rgb(150, 192, 214)), fontSize = 11.sp))
             if (weather.high >= 0 && weather.low >= 0) {
                 Text("↑ ${weather.high}°   ↓ ${weather.low}°", style = TextStyle(color = ColorProvider(Color.rgb(184, 202, 214)), fontSize = 11.sp))
