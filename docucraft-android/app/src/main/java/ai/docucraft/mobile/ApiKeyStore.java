@@ -21,11 +21,11 @@ public final class ApiKeyStore {
 
     public static void save(Context context, String apiKey) throws Exception {
         SecretKey key = getOrCreateKey();
-        byte[] iv = new byte[12];
-        new java.security.SecureRandom().nextBytes(iv);
-
+        // Let Android Keystore generate the GCM IV. Some Keystore implementations
+        // reject caller-supplied IVs with "Caller-provided IV not permitted".
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(128, iv));
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        byte[] iv = cipher.getIV();
         byte[] encrypted = cipher.doFinal(apiKey.getBytes(StandardCharsets.UTF_8));
 
         String value = Base64.encodeToString(iv, Base64.NO_WRAP) + "." +
