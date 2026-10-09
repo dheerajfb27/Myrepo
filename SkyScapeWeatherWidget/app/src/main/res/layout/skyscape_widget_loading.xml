@@ -1,0 +1,7 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="#E610141A">
+    <TextView android:layout_width="match_parent" android:layout_height="match_parent"
+        android:gravity="center_vertical" android:padding="16dp" android:text="SkyScape · Weather loading…"
+        android:textColor="#FFFFFFFF" android:textSize="16sp" />
+</FrameLayout>
