@@ -1,1 +1,0 @@
-# DocuCraft AI release rules
