@@ -54,7 +54,7 @@ private fun WidgetContent(weather: WeatherSnapshot) {
         }
         Column(horizontalAlignment = Alignment.End) {
             val temp = if (weather.temperature >= 0) "${weather.temperature}°" else "--°"
-            Text("${weather.symbol}  $temp", style = TextStyle(color = ColorProvider(Color.White), fontSize = 22.sp))
+            Text("${weather.symbol}  $temp", style = TextStyle(color = ColorProvider(Color.WHITE), fontSize = 22.sp))
             Text("Open-Meteo", style = TextStyle(color = ColorProvider(Color.rgb(116, 204, 242)), fontSize = 10.sp))
         }
     }
