@@ -26,18 +26,22 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import androidx.glance.unit.dp
 import androidx.glance.unit.sp
+import androidx.glance.appwidget.updateAll
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class SkyScapeWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        provideContent { WidgetContent() }
+        val weather = WeatherRepository.refresh(context)
+        provideContent { WidgetContent(weather) }
     }
 }
 
 @Composable
-private fun WidgetContent() {
+private fun WidgetContent(weather: WeatherSnapshot) {
     Row(
         modifier = GlanceModifier.fillMaxSize()
-            .background(ColorProvider(Color.rgb(14, 19, 26)))
+            .background(ColorProvider(Color.rgb(10, 15, 22)))
             .cornerRadius(24.dp)
             .padding(14.dp)
             .clickable(actionStartActivity<MainActivity>()),
@@ -46,12 +50,16 @@ private fun WidgetContent() {
         Column(modifier = GlanceModifier.defaultWeight()) {
             Text("🌳  🐦  ☁️", style = TextStyle(color = ColorProvider(Color.rgb(228, 242, 249)), fontSize = 22.sp))
             Spacer(GlanceModifier.height(5.dp))
-            Text("SkyScape", style = TextStyle(color = ColorProvider(Color.White), fontSize = 15.sp, fontWeight = FontWeight.Bold))
-            Text("Nature on your home screen", style = TextStyle(color = ColorProvider(Color.rgb(150, 192, 214)), fontSize = 11.sp))
+            Text("SkyScape · ${weather.location}", style = TextStyle(color = ColorProvider(Color.White), fontSize = 14.sp, fontWeight = FontWeight.Bold))
+            Text(weather.description, style = TextStyle(color = ColorProvider(Color.rgb(150, 192, 214)), fontSize = 11.sp))
+            if (weather.high >= 0 && weather.low >= 0) {
+                Text("↑ ${weather.high}°   ↓ ${weather.low}°", style = TextStyle(color = ColorProvider(Color.rgb(184, 202, 214)), fontSize = 11.sp))
+            }
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text("☀️  --°", style = TextStyle(color = ColorProvider(Color.White), fontSize = 22.sp))
-            Text("Weather setup", style = TextStyle(color = ColorProvider(Color.rgb(182, 199, 210)), fontSize = 10.sp))
+            val temp = if (weather.temperature >= 0) "${weather.temperature}°" else "--°"
+            Text("${weather.symbol}  $temp", style = TextStyle(color = ColorProvider(Color.White), fontSize = 22.sp))
+            Text("Open-Meteo", style = TextStyle(color = ColorProvider(Color.rgb(116, 204, 242)), fontSize = 10.sp))
         }
     }
 }
