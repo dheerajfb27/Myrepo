@@ -16,7 +16,6 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
-import androidx.glance.layout.defaultWeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
@@ -26,9 +25,6 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import androidx.glance.unit.dp
 import androidx.glance.unit.sp
-import androidx.glance.appwidget.updateAll
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class SkyScapeWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
