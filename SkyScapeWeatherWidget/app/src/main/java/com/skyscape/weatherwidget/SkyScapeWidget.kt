@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 
 class SkyScapeWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val weather = WeatherRepository.refresh(context)
+        val weather = WeatherRepository.cached(context)
         provideContent { WidgetContent(weather) }
     }
 }
@@ -62,4 +62,9 @@ private fun WidgetContent(weather: WeatherSnapshot) {
 
 class SkyScapeWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = SkyScapeWidget()
+
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        WeatherRefreshWorker.schedule(context)
+    }
 }
