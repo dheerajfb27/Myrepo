@@ -4,8 +4,21 @@ import android.content.Context
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+data class ForecastDay(
+    val day: String,
+    val high: Int,
+    val low: Int,
+    val description: String,
+    val symbol: String
+)
 
 data class WeatherSnapshot(
     val temperature: Int,
@@ -13,7 +26,8 @@ data class WeatherSnapshot(
     val low: Int,
     val description: String,
     val symbol: String,
-    val location: String = "Bengaluru"
+    val location: String = "Bengaluru",
+    val forecast: List<ForecastDay> = emptyList()
 )
 
 object WeatherRepository {
@@ -23,18 +37,17 @@ object WeatherRepository {
     private const val KEY_LOW = "low"
     private const val KEY_DESCRIPTION = "description"
     private const val KEY_SYMBOL = "symbol"
+    private const val KEY_FORECAST = "forecast_json"
 
     suspend fun refresh(context: Context): WeatherSnapshot = withContext(Dispatchers.IO) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         try {
-            // MET Norway Locationforecast: global forecast, no API key required.
-            // Identify this client as required by api.met.no usage guidance.
             val url = URL("https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=12.9716&lon=77.5946")
             val connection = (url.openConnection() as HttpURLConnection).apply {
                 connectTimeout = 10000
                 readTimeout = 10000
                 requestMethod = "GET"
-                setRequestProperty("User-Agent", "SkyScapeWeatherWidget/0.1.2 (Android weather widget)")
+                setRequestProperty("User-Agent", "SkyScapeWeatherWidget/0.1.3 (Android weather widget)")
                 setRequestProperty("Accept", "application/json")
             }
             val status = connection.responseCode
@@ -52,43 +65,82 @@ object WeatherRepository {
             val details = firstData.getJSONObject("instant").getJSONObject("details")
             val temp = details.getDouble("air_temperature").toInt()
             val nextHour = firstData.optJSONObject("next_1_hours")
-            val summary = nextHour?.optJSONObject("summary")
-            val symbolCode = summary?.optString("symbol_code", "cloudy") ?: "cloudy"
+            val symbolCode = nextHour?.optJSONObject("summary")?.optString("symbol_code", "cloudy") ?: "cloudy"
             val (description, symbol) = condition(symbolCode)
 
             var high = temp
             var low = temp
-            // Estimate today's range from the next 24 forecast points.
             for (i in 0 until minOf(24, series.length())) {
-                val item = series.getJSONObject(i).getJSONObject("data")
-                    .getJSONObject("instant").getJSONObject("details")
+                val item = series.getJSONObject(i).getJSONObject("data").getJSONObject("instant").getJSONObject("details")
                 val t = item.optDouble("air_temperature", temp.toDouble()).toInt()
                 high = maxOf(high, t)
                 low = minOf(low, t)
             }
 
+            val forecast = buildForecast(series, temp)
+            val forecastJson = org.json.JSONArray()
+            forecast.forEach { day ->
+                forecastJson.put(JSONObject().put("day", day.day).put("high", day.high).put("low", day.low)
+                    .put("description", day.description).put("symbol", day.symbol))
+            }
             prefs.edit().putInt(KEY_TEMP, temp).putInt(KEY_HIGH, high).putInt(KEY_LOW, low)
-                .putString(KEY_DESCRIPTION, description).putString(KEY_SYMBOL, symbol).apply()
-            WeatherSnapshot(temp, high, low, description, symbol)
+                .putString(KEY_DESCRIPTION, description).putString(KEY_SYMBOL, symbol)
+                .putString(KEY_FORECAST, forecastJson.toString()).apply()
+            WeatherSnapshot(temp, high, low, description, symbol, forecast = forecast)
         } catch (_: Exception) {
-            // Keep the last successful forecast visible if the service is unreachable.
-            WeatherSnapshot(
-                prefs.getInt(KEY_TEMP, -1), prefs.getInt(KEY_HIGH, -1), prefs.getInt(KEY_LOW, -1),
-                prefs.getString(KEY_DESCRIPTION, "Weather unavailable — tap to retry") ?: "Weather unavailable — tap to retry",
-                prefs.getString(KEY_SYMBOL, "☁️") ?: "☁️"
-            )
+            cached(context)
         }
     }
 
     fun cached(context: Context): WeatherSnapshot {
         val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        return WeatherSnapshot(p.getInt(KEY_TEMP, -1), p.getInt(KEY_HIGH, -1), p.getInt(KEY_LOW, -1),
+        val forecast = mutableListOf<ForecastDay>()
+        runCatching {
+            val arr = org.json.JSONArray(p.getString(KEY_FORECAST, "[]"))
+            for (i in 0 until arr.length()) {
+                val item = arr.getJSONObject(i)
+                forecast.add(ForecastDay(item.optString("day", "Day"), item.optInt("high", -1), item.optInt("low", -1),
+                    item.optString("description", "Forecast"), item.optString("symbol", "☁️")))
+            }
+        }
+        return WeatherSnapshot(
+            p.getInt(KEY_TEMP, -1), p.getInt(KEY_HIGH, -1), p.getInt(KEY_LOW, -1),
             p.getString(KEY_DESCRIPTION, "Tap to refresh") ?: "Tap to refresh",
-            p.getString(KEY_SYMBOL, "☁️") ?: "☁️")
+            p.getString(KEY_SYMBOL, "☁️") ?: "☁️", forecast = forecast
+        )
+    }
+
+    private fun buildForecast(series: org.json.JSONArray, fallbackTemp: Int): List<ForecastDay> {
+        val utcParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
+        val localDay = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = TimeZone.getTimeZone("Asia/Kolkata") }
+        val dayLabel = SimpleDateFormat("EEE", Locale.US).apply { timeZone = TimeZone.getTimeZone("Asia/Kolkata") }
+        val buckets = linkedMapOf<String, MutableList<Any>>()
+        val now = Date()
+        val todayKey = localDay.format(now)
+        for (i in 0 until series.length()) {
+            val point = series.getJSONObject(i)
+            val date = runCatching { utcParser.parse(point.optString("time")) }.getOrNull() ?: continue
+            val key = localDay.format(date)
+            val data = point.optJSONObject("data") ?: continue
+            val temp = data.optJSONObject("instant")?.optJSONObject("details")?.optDouble("air_temperature", fallbackTemp.toDouble())?.toInt() ?: fallbackTemp
+            val next = data.optJSONObject("next_1_hours")?.optJSONObject("summary")?.optString("symbol_code", "cloudy") ?: "cloudy"
+            val bucket = buckets.getOrPut(key) { mutableListOf(Int.MAX_VALUE, Int.MIN_VALUE, next, date) }
+            bucket[0] = minOf(bucket[0] as Int, temp)
+            bucket[1] = maxOf(bucket[1] as Int, temp)
+            if (i % 4 == 0) bucket[2] = next
+        }
+        return buckets.entries.take(3).mapIndexed { index, entry ->
+            val bucket = entry.value
+            val code = bucket[2] as String
+            val (desc, icon) = condition(code)
+            val date = bucket[3] as Date
+            ForecastDay(if (entry.key == todayKey || index == 0) "Today" else dayLabel.format(date),
+                bucket[1] as Int, bucket[0] as Int, desc, icon)
+        }
     }
 
     private fun condition(code: String): Pair<String, String> {
-        val normalized = code.lowercase()
+        val normalized = code.lowercase(Locale.US)
         return when {
             normalized.startsWith("clearsky") -> "Clear sky" to "☀️"
             normalized.startsWith("fair") -> "Mostly clear" to "🌤️"
