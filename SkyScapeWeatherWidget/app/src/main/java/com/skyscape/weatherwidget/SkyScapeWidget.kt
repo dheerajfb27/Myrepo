@@ -61,14 +61,19 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
         }
 
         val pending = goAsync()
-        val manager = AppWidgetManager.getInstance(context)
-        val ids = manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetReceiver::class.java))
+        val appContext = context.applicationContext
+        val manager = AppWidgetManager.getInstance(appContext)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
-                val snapshot = WeatherRepository.refresh(context)
-                ids.forEach { id -> render(context, manager, id, snapshot, false) }
-            } catch (_: Exception) {
-                ids.forEach { id -> render(context, manager, id, WeatherRepository.cached(context), false) }
+                val snapshot = runCatching { WeatherRepository.refresh(appContext) }
+                    .getOrElse { WeatherRepository.cached(appContext) }
+                val ids = runCatching {
+                    manager.getAppWidgetIds(ComponentName(appContext, SkyScapeWidgetReceiver::class.java))
+                }.getOrDefault(intArrayOf())
+                ids.forEach { id ->
+                    // A single malformed RemoteViews update must not terminate the refresh coroutine.
+                    runCatching { render(appContext, manager, id, snapshot, false) }
+                }
             } finally {
                 pending.finish()
             }
