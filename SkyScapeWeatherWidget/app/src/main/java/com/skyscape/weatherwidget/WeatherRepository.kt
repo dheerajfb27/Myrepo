@@ -27,29 +27,54 @@ object WeatherRepository {
     suspend fun refresh(context: Context): WeatherSnapshot = withContext(Dispatchers.IO) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         try {
-            // Default city coordinates are Bengaluru; later settings can make this user-selectable.
-            val url = URL("https://api.open-meteo.com/v1/forecast?latitude=12.9716&longitude=77.5946&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=Asia%2FKolkata")
+            // MET Norway Locationforecast: global forecast, no API key required.
+            // Identify this client as required by api.met.no usage guidance.
+            val url = URL("https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=12.9716&lon=77.5946")
             val connection = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 8000
-                readTimeout = 8000
+                connectTimeout = 10000
+                readTimeout = 10000
                 requestMethod = "GET"
+                setRequestProperty("User-Agent", "SkyScapeWeatherWidget/0.1.2 (Android weather widget)")
+                setRequestProperty("Accept", "application/json")
             }
-            val json = connection.inputStream.bufferedReader().use { JSONObject(it.readText()) }
+            val status = connection.responseCode
+            if (status !in 200..299) {
+                connection.disconnect()
+                throw IllegalStateException("MET Norway returned HTTP $status")
+            }
+            val body = connection.inputStream.bufferedReader().use { it.readText() }
             connection.disconnect()
-            val current = json.getJSONObject("current")
-            val daily = json.getJSONObject("daily")
-            val temp = current.getDouble("temperature_2m").toInt()
-            val code = current.getInt("weather_code")
-            val high = daily.getJSONArray("temperature_2m_max").getDouble(0).toInt()
-            val low = daily.getJSONArray("temperature_2m_min").getDouble(0).toInt()
-            val (description, symbol) = condition(code)
+
+            val root = JSONObject(body)
+            val series = root.getJSONObject("properties").getJSONArray("timeseries")
+            if (series.length() == 0) throw IllegalStateException("Empty forecast")
+            val firstData = series.getJSONObject(0).getJSONObject("data")
+            val details = firstData.getJSONObject("instant").getJSONObject("details")
+            val temp = details.getDouble("air_temperature").toInt()
+            val nextHour = firstData.optJSONObject("next_1_hours")
+            val summary = nextHour?.optJSONObject("summary")
+            val symbolCode = summary?.optString("symbol_code", "cloudy") ?: "cloudy"
+            val (description, symbol) = condition(symbolCode)
+
+            var high = temp
+            var low = temp
+            // Estimate today's range from the next 24 forecast points.
+            for (i in 0 until minOf(24, series.length())) {
+                val item = series.getJSONObject(i).getJSONObject("data")
+                    .getJSONObject("instant").getJSONObject("details")
+                val t = item.optDouble("air_temperature", temp.toDouble()).toInt()
+                high = maxOf(high, t)
+                low = minOf(low, t)
+            }
+
             prefs.edit().putInt(KEY_TEMP, temp).putInt(KEY_HIGH, high).putInt(KEY_LOW, low)
                 .putString(KEY_DESCRIPTION, description).putString(KEY_SYMBOL, symbol).apply()
             WeatherSnapshot(temp, high, low, description, symbol)
         } catch (_: Exception) {
+            // Keep the last successful forecast visible if the service is unreachable.
             WeatherSnapshot(
                 prefs.getInt(KEY_TEMP, -1), prefs.getInt(KEY_HIGH, -1), prefs.getInt(KEY_LOW, -1),
-                prefs.getString(KEY_DESCRIPTION, "Tap to retry") ?: "Tap to retry",
+                prefs.getString(KEY_DESCRIPTION, "Weather unavailable — tap to retry") ?: "Weather unavailable — tap to retry",
                 prefs.getString(KEY_SYMBOL, "☁️") ?: "☁️"
             )
         }
@@ -62,15 +87,20 @@ object WeatherRepository {
             p.getString(KEY_SYMBOL, "☁️") ?: "☁️")
     }
 
-    private fun condition(code: Int): Pair<String, String> = when (code) {
-        0 -> "Clear sky" to "☀️"
-        1, 2 -> "Partly cloudy" to "🌤️"
-        3 -> "Overcast" to "☁️"
-        45, 48 -> "Foggy" to "🌫️"
-        51, 53, 55, 56, 57 -> "Drizzle" to "🌦️"
-        61, 63, 65, 66, 67, 80, 81, 82 -> "Rain" to "🌧️"
-        71, 73, 75, 77, 85, 86 -> "Snow" to "❄️"
-        95, 96, 99 -> "Thunderstorm" to "⛈️"
-        else -> "Current weather" to "🌤️"
+    private fun condition(code: String): Pair<String, String> {
+        val normalized = code.lowercase()
+        return when {
+            normalized.startsWith("clearsky") -> "Clear sky" to "☀️"
+            normalized.startsWith("fair") -> "Mostly clear" to "🌤️"
+            normalized.startsWith("partlycloudy") -> "Partly cloudy" to "⛅"
+            normalized.startsWith("cloudy") -> "Cloudy" to "☁️"
+            normalized.startsWith("fog") -> "Foggy" to "🌫️"
+            normalized.contains("lightrain") || normalized.contains("rainshowers") -> "Light rain" to "🌦️"
+            normalized.contains("rain") -> "Rain" to "🌧️"
+            normalized.contains("sleet") -> "Sleet" to "🌨️"
+            normalized.contains("snow") -> "Snow" to "❄️"
+            normalized.contains("thunder") -> "Thunderstorm" to "⛈️"
+            else -> "Current weather" to "🌤️"
+        }
     }
 }
