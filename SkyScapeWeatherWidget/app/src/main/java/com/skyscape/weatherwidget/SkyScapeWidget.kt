@@ -48,23 +48,26 @@ class SkyScapeWidget : GlanceAppWidget() {
 class SkyScapeWidgetReceiver : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
         appWidgetIds.forEach { id -> render(context, manager, id, WeatherRepository.cached(context)) }
-        refreshAll(context, manager, appWidgetIds)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (intent.action == ACTION_REFRESH) {
+        if (intent.action == ACTION_REFRESH || intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
+            val pending = goAsync()
             val manager = AppWidgetManager.getInstance(context)
-            val ids = manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetReceiver::class.java))
-            refreshAll(context, manager, ids)
-        }
-    }
-
-    private fun refreshAll(context: Context, manager: AppWidgetManager, ids: IntArray) {
-        if (ids.isEmpty()) return
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            val snapshot = WeatherRepository.refresh(context)
-            ids.forEach { id -> render(context, manager, id, snapshot) }
+            val ids = if (intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
+                intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
+                    ?: manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetReceiver::class.java))
+            } else manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetReceiver::class.java))
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                try {
+                    ids.forEach { id -> render(context, manager, id, WeatherRepository.cached(context)) }
+                    val snapshot = WeatherRepository.refresh(context)
+                    ids.forEach { id -> render(context, manager, id, snapshot) }
+                } finally {
+                    pending.finish()
+                }
+            }
         }
     }
 
