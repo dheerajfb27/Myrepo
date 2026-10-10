@@ -41,8 +41,10 @@ class SkyScapeWidget : androidx.glance.appwidget.GlanceAppWidget() {
 
 class SkyScapeWidgetReceiver : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
-        appWidgetIds.forEach { id -> render(context, manager, id, WeatherRepository.cached(context), false) }
-        context.sendBroadcast(Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_REFRESH))
+        // Always replace the XML placeholder immediately, then fetch weather asynchronously.
+        val cached = WeatherRepository.cached(context)
+        appWidgetIds.forEach { id -> render(context, manager, id, cached, cached.temperature < 0) }
+        requestRefresh(context)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -51,10 +53,27 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
             renderAll(appContext, WeatherRepository.cached(appContext))
             return
         }
-        if (intent.action != ACTION_REFRESH) {
-            super.onReceive(context, intent)
+        // Handle this explicitly so the launcher update broadcast cannot leave the initial XML
+        // layout on screen if superclass dispatch changes between Android launcher versions.
+        if (intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
+            val manager = AppWidgetManager.getInstance(appContext)
+            val ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
+                ?: manager.getAppWidgetIds(ComponentName(appContext, SkyScapeWidgetReceiver::class.java))
+            onUpdate(appContext, manager, ids)
             return
         }
+        if (intent.action == ACTION_REFRESH) {
+            refreshWeather(appContext)
+            return
+        }
+        super.onReceive(context, intent)
+    }
+
+    private fun requestRefresh(context: Context) {
+        context.sendBroadcast(Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_REFRESH))
+    }
+
+    private fun refreshWeather(appContext: Context) {
         val pending = goAsync()
         val manager = AppWidgetManager.getInstance(appContext)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
