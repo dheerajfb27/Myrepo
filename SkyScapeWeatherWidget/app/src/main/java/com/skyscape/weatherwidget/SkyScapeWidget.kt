@@ -27,16 +27,14 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Calendar
 
-/** Compatibility Glance widget. The visible feature-rich widget is the native RemoteViews receiver below. */
 class SkyScapeWidget : androidx.glance.appwidget.GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
             Text(
                 text = "SkyScape Weather • Open app for forecast",
-                modifier = GlanceModifier.fillMaxSize()
-                    .background(ColorProvider(Color.rgb(16, 20, 28)))
-                    .padding(16.dp),
+                modifier = GlanceModifier.fillMaxSize().background(ColorProvider(Color.rgb(16, 20, 28))).padding(16.dp),
                 style = TextStyle(color = ColorProvider(Color.WHITE), fontSize = 14.sp)
             )
         }
@@ -63,11 +61,8 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
         val manager = AppWidgetManager.getInstance(appContext)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
-                val snapshot = runCatching { WeatherRepository.refresh(appContext) }
-                    .getOrElse { WeatherRepository.cached(appContext) }
-                val ids = runCatching {
-                    manager.getAppWidgetIds(ComponentName(appContext, SkyScapeWidgetReceiver::class.java))
-                }.getOrDefault(intArrayOf())
+                val snapshot = runCatching { WeatherRepository.refresh(appContext) }.getOrElse { WeatherRepository.cached(appContext) }
+                val ids = runCatching { manager.getAppWidgetIds(ComponentName(appContext, SkyScapeWidgetReceiver::class.java)) }.getOrDefault(intArrayOf())
                 ids.forEach { id -> runCatching { render(appContext, manager, id, snapshot, false) } }
             } finally {
                 pending.finish()
@@ -77,9 +72,7 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
 
     private fun renderAll(context: Context, weather: WeatherSnapshot) {
         val manager = AppWidgetManager.getInstance(context)
-        val ids = runCatching {
-            manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetReceiver::class.java))
-        }.getOrDefault(intArrayOf())
+        val ids = runCatching { manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetReceiver::class.java)) }.getOrDefault(intArrayOf())
         ids.forEach { id -> runCatching { render(context, manager, id, weather, false) } }
     }
 
@@ -89,8 +82,25 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
         views.setTextViewText(R.id.widget_date, now.uppercase(Locale.US))
         views.setTextViewText(R.id.widget_temperature, if (weather.temperature >= 0) "${weather.temperature}°" else "--°")
         views.setTextViewText(R.id.widget_condition, if (weather.temperature >= 0) "${weather.symbol}  ${weather.description}" else if (loading) "Connecting to weather…" else "Weather unavailable • tap to retry")
-        views.setTextViewText(R.id.widget_range,
-            if (weather.high >= 0 && weather.low >= 0) "HIGH ${weather.high}°   •   LOW ${weather.low}°" else if (loading) "Fetching current conditions…" else "Check internet and tap to retry")
+        views.setTextViewText(R.id.widget_range, if (weather.high >= 0 && weather.low >= 0) "HIGH ${weather.high}°   •   LOW ${weather.low}°" else if (loading) "Fetching current conditions…" else "Check internet and tap to retry")
+
+        val condition = weather.description.lowercase(Locale.US)
+        val isRain = condition.contains("rain") || condition.contains("storm") || condition.contains("sleet")
+        val isCloudy = condition.contains("cloud") || condition.contains("fog")
+        val phase = Calendar.getInstance().get(Calendar.MINUTE) / 15 % 2
+        val sun = when {
+            isRain -> "🌧️"
+            isCloudy -> if (phase == 0) "🌤️" else "⛅"
+            phase == 0 -> "☀️"
+            else -> "🌞"
+        }
+        val cloud = when {
+            isRain -> if (phase == 0) "🌧️" else "🌦️"
+            isCloudy -> if (phase == 0) "☁️" else "🌥️"
+            else -> if (phase == 0) "☁️" else "☁️"
+        }
+        views.setTextViewText(R.id.widget_scene_sun, sun)
+        views.setTextViewText(R.id.widget_scene_cloud, cloud)
 
         val forecastIds = listOf(
             Triple(R.id.forecast_day_1, R.id.forecast_icon_1, R.id.forecast_temp_1),
@@ -108,8 +118,7 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
         }
 
         val refreshIntent = Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_REFRESH)
-        val refreshPending = PendingIntent.getBroadcast(context, id, refreshIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val refreshPending = PendingIntent.getBroadcast(context, id, refreshIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         views.setOnClickPendingIntent(R.id.widget_refresh, refreshPending)
         views.setOnClickPendingIntent(R.id.widget_temperature, refreshPending)
         bindActivityShortcut(context, views, R.id.shortcut_phone, 1001, Intent(Intent.ACTION_DIAL))
@@ -122,8 +131,7 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
 
     private fun bindActivityShortcut(context: Context, views: RemoteViews, viewId: Int, requestCode: Int, intent: Intent) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val pending = PendingIntent.getActivity(context, requestCode, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val pending = PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         views.setOnClickPendingIntent(viewId, pending)
     }
 
@@ -131,12 +139,10 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
         val launch = context.packageManager.getLaunchIntentForPackage(packageName)
         if (launch != null) {
             launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            val pending = PendingIntent.getActivity(context, requestCode, launch,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val pending = PendingIntent.getActivity(context, requestCode, launch, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             views.setOnClickPendingIntent(viewId, pending)
         } else {
-            val fallback = PendingIntent.getBroadcast(context, requestCode,
-                Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_REFRESH),
+            val fallback = PendingIntent.getBroadcast(context, requestCode, Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_REFRESH),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             views.setOnClickPendingIntent(viewId, fallback)
         }
