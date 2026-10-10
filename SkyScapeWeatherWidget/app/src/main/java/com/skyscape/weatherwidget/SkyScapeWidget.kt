@@ -78,9 +78,10 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.skyscape_widget_loading)
         val now = SimpleDateFormat("EEE, d MMM  •  Bengaluru", Locale.US).format(Date())
         views.setTextViewText(R.id.widget_date, now.uppercase(Locale.US))
+        views.setTextViewText(R.id.widget_symbol, weather.symbol.ifBlank { "⛅" })
         views.setTextViewText(R.id.widget_temperature, if (weather.temperature >= 0) "${weather.temperature}°" else "--°")
-        views.setTextViewText(R.id.widget_condition, if (weather.temperature >= 0) "${weather.symbol}  ${weather.description}" else if (loading) "Connecting to weather…" else "Weather unavailable • tap to retry")
-        views.setTextViewText(R.id.widget_range, if (weather.high >= 0 && weather.low >= 0) "HIGH ${weather.high}°   •   LOW ${weather.low}°" else if (loading) "Fetching current conditions…" else "Check internet and tap to retry")
+        views.setTextViewText(R.id.widget_condition, if (weather.temperature >= 0) weather.description else if (loading) "Connecting to weather…" else "Weather unavailable • tap to retry")
+        views.setTextViewText(R.id.widget_range, if (weather.high >= 0 && weather.low >= 0) "HIGH ${weather.high}°  •  LOW ${weather.low}°" else if (loading) "Fetching current conditions…" else "Check internet and tap to retry")
 
         val forecastIds = listOf(
             Triple(R.id.forecast_day_1, R.id.forecast_icon_1, R.id.forecast_temp_1),
