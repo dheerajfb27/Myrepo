@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.glance.appwidget.updateAll
 import android.content.Intent
 import kotlinx.coroutines.launch
 
@@ -37,10 +36,17 @@ private fun SkyScapeHome() {
         if (refreshing) return
         scope.launch {
             refreshing = true
-            weather = WeatherRepository.refresh(context)
-            runCatching { SkyScapeWidget().updateAll(context) }
-            runCatching { context.sendBroadcast(Intent(context, SkyScapeWidgetReceiver::class.java).setAction("com.skyscape.weatherwidget.ACTION_REFRESH")) }
-            refreshing = false
+            try {
+                weather = WeatherRepository.refresh(context)
+                // The home-screen widget is a native RemoteViews AppWidget, not a Glance widget.
+                // Ask its receiver to render the fresh snapshot already saved by the repository.
+                context.sendBroadcast(
+                    Intent(context, SkyScapeWidgetReceiver::class.java)
+                        .setAction("com.skyscape.weatherwidget.ACTION_RENDER_CACHED")
+                )
+            } finally {
+                refreshing = false
+            }
         }
     }
 
