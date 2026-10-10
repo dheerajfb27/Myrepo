@@ -1,6 +1,8 @@
 package com.skyscape.weatherwidget
 
 import android.app.PendingIntent
+import android.app.AlarmManager
+import android.os.SystemClock
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
@@ -44,12 +46,17 @@ class SkyScapeWidget : androidx.glance.appwidget.GlanceAppWidget() {
 class SkyScapeWidgetReceiver : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
         appWidgetIds.forEach { id -> render(context, manager, id, WeatherRepository.cached(context), false) }
+        scheduleSceneAnimation(context)
         context.sendBroadcast(Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_REFRESH))
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         val appContext = context.applicationContext
         if (intent.action == ACTION_RENDER_CACHED) {
+            renderAll(appContext, WeatherRepository.cached(appContext))
+            return
+        }
+        if (intent.action == ACTION_ANIMATE_SCENE) {
             renderAll(appContext, WeatherRepository.cached(appContext))
             return
         }
@@ -87,7 +94,8 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
         val condition = weather.description.lowercase(Locale.US)
         val isRain = condition.contains("rain") || condition.contains("storm") || condition.contains("sleet")
         val isCloudy = condition.contains("cloud") || condition.contains("fog")
-        val phase = Calendar.getInstance().get(Calendar.MINUTE) / 15 % 2
+        val seconds = Calendar.getInstance().get(Calendar.SECOND)
+        val phase = (Calendar.getInstance().get(Calendar.MINUTE) * 2 + seconds / 30) % 4
         val sun = when {
             isRain -> "🌧️"
             isCloudy -> if (phase == 0) "🌤️" else "⛅"
@@ -101,6 +109,10 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
         }
         views.setTextViewText(R.id.widget_scene_sun, sun)
         views.setTextViewText(R.id.widget_scene_cloud, cloud)
+        // RemoteViews cannot run a continuous view animation, so shift scene elements on scheduled ticks.
+        val travel = floatArrayOf(-5f, 0f, 5f, 0f)[phase]
+        runCatching { views.setFloat(R.id.widget_scene_sun, "setTranslationX", travel) }
+        runCatching { views.setFloat(R.id.widget_scene_cloud, "setTranslationX", -travel * 1.6f) }
 
         val forecastIds = listOf(
             Triple(R.id.forecast_day_1, R.id.forecast_icon_1, R.id.forecast_temp_1),
@@ -129,6 +141,22 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
         manager.updateAppWidget(id, views)
     }
 
+    private fun scheduleSceneAnimation(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_ANIMATE_SCENE)
+        val pending = PendingIntent.getBroadcast(
+            context, 7721, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        // Inexact repeating alarms respect Android power limits; launcher refresh cadence can vary.
+        alarmManager.setInexactRepeating(
+            AlarmManager.ELAPSED_REALTIME,
+            SystemClock.elapsedRealtime() + 30_000L,
+            30_000L,
+            pending
+        )
+    }
+
     private fun bindActivityShortcut(context: Context, views: RemoteViews, viewId: Int, requestCode: Int, intent: Intent) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val pending = PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -151,5 +179,6 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
     companion object {
         private const val ACTION_REFRESH = "com.skyscape.weatherwidget.ACTION_REFRESH"
         private const val ACTION_RENDER_CACHED = "com.skyscape.weatherwidget.ACTION_RENDER_CACHED"
+        private const val ACTION_ANIMATE_SCENE = "com.skyscape.weatherwidget.ACTION_ANIMATE_SCENE"
     }
 }
