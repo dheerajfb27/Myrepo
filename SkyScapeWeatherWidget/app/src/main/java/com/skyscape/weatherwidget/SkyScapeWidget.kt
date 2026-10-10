@@ -10,7 +10,6 @@ import android.net.Uri
 import android.widget.RemoteViews
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.fillMaxSize
@@ -30,7 +29,7 @@ import java.util.Date
 import java.util.Locale
 
 /** Kept for compatibility with existing app-side update calls. */
-class SkyScapeWidget : GlanceAppWidget() {
+class SkyScapeWidget : androidx.glance.appwidget.GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
             Text(
@@ -48,20 +47,27 @@ class SkyScapeWidget : GlanceAppWidget() {
 class SkyScapeWidgetReceiver : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
         appWidgetIds.forEach { id -> render(context, manager, id, WeatherRepository.cached(context), false) }
-        // Let the standard AppWidgetProvider update finish first, then request a separate
-        // refresh broadcast. This avoids doing network work in the system update callback.
         context.sendBroadcast(Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_REFRESH))
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        // Standard widget broadcasts must be handled by AppWidgetProvider only.
+        val appContext = context.applicationContext
+        if (intent.action == ACTION_RENDER_CACHED) {
+            val manager = AppWidgetManager.getInstance(appContext)
+            val weather = WeatherRepository.cached(appContext)
+            val ids = runCatching {
+                manager.getAppWidgetIds(ComponentName(appContext, SkyScapeWidgetReceiver::class.java))
+            }.getOrDefault(intArrayOf())
+            ids.forEach { id -> runCatching { render(appContext, manager, id, weather, false) } }
+            return
+        }
+
         if (intent.action != ACTION_REFRESH) {
             super.onReceive(context, intent)
             return
         }
 
         val pending = goAsync()
-        val appContext = context.applicationContext
         val manager = AppWidgetManager.getInstance(appContext)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
@@ -70,10 +76,7 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
                 val ids = runCatching {
                     manager.getAppWidgetIds(ComponentName(appContext, SkyScapeWidgetReceiver::class.java))
                 }.getOrDefault(intArrayOf())
-                ids.forEach { id ->
-                    // A single malformed RemoteViews update must not terminate the refresh coroutine.
-                    runCatching { render(appContext, manager, id, snapshot, false) }
-                }
+                ids.forEach { id -> runCatching { render(appContext, manager, id, snapshot, false) } }
             } finally {
                 pending.finish()
             }
@@ -131,7 +134,6 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             views.setOnClickPendingIntent(viewId, pending)
         } else {
-            // Keep the widget functional when the optional app is not installed.
             val fallback = PendingIntent.getBroadcast(context, requestCode,
                 Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_REFRESH),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -141,5 +143,6 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
 
     companion object {
         private const val ACTION_REFRESH = "com.skyscape.weatherwidget.ACTION_REFRESH"
+        private const val ACTION_RENDER_CACHED = "com.skyscape.weatherwidget.ACTION_RENDER_CACHED"
     }
 }
