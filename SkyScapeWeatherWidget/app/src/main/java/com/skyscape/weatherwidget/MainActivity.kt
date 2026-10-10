@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.appwidget.updateAll
+import android.content.Intent
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -38,6 +39,7 @@ private fun SkyScapeHome() {
             refreshing = true
             weather = WeatherRepository.refresh(context)
             runCatching { SkyScapeWidget().updateAll(context) }
+            runCatching { context.sendBroadcast(Intent(context, SkyScapeWidgetReceiver::class.java).setAction("com.skyscape.weatherwidget.ACTION_REFRESH")) }
             refreshing = false
         }
     }
@@ -53,9 +55,9 @@ private fun SkyScapeHome() {
             Text("WEATHER WIDGET", color = Color(0xFF79D9FF), letterSpacing = 3.sp, fontSize = 12.sp)
             Text("Nature on your home screen", color = Color(0xFFD0D9E1), fontSize = 16.sp)
             GlassWeatherPreview(weather)
-            Text("Your weather, framed by nature.", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+            Text("A scenic road, rainbow accents and a 3-day forecast.", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
             Text(
-                "Add the resizable SkyScape widget from your Pixel home-screen widget picker. Weather is provided by Open-Meteo for Bengaluru.",
+                "Add the resizable SkyScape widget from your Pixel home-screen widget picker. Weather data and the 3-day outlook are provided by MET Norway for Bengaluru.",
                 color = Color(0xFFADB8C4), fontSize = 14.sp, lineHeight = 21.sp
             )
             Button(
@@ -66,7 +68,7 @@ private fun SkyScapeHome() {
                 Text(if (refreshing) "Refreshing weather…" else "Refresh weather")
             }
             Spacer(Modifier.weight(1f))
-            Text("BLACK GLASS  •  NATURE SCENE  •  RESIZABLE", color = Color(0xFF79D9FF), fontSize = 10.sp, letterSpacing = 1.sp)
+            Text("SCENIC ROAD  •  3-DAY FORECAST  •  SHORTCUT DOCK", color = Color(0xFF79D9FF), fontSize = 10.sp, letterSpacing = 1.sp)
         }
     }
 }
