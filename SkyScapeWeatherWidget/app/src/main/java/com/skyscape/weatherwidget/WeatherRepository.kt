@@ -88,7 +88,47 @@ object WeatherRepository {
                 .putString(KEY_FORECAST, forecastJson.toString()).apply()
             WeatherSnapshot(temp, high, low, description, symbol, forecast = forecast)
         } catch (_: Exception) {
-            cached(context)
+            // Fallback provider: still show current temperature if MET Norway is unavailable.
+            runCatching {
+                val fallbackUrl = URL("https://api.open-meteo.com/v1/forecast?latitude=12.9716&longitude=77.5946&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FKolkata&forecast_days=3")
+                val conn = (fallbackUrl.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 10000
+                    readTimeout = 10000
+                    requestMethod = "GET"
+                    setRequestProperty("Accept", "application/json")
+                }
+                val status = conn.responseCode
+                if (status !in 200..299) throw IllegalStateException("Fallback weather HTTP $status")
+                val json = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+                conn.disconnect()
+                val current = json.getJSONObject("current")
+                val daily = json.getJSONObject("daily")
+                val temp = current.getDouble("temperature_2m").toInt()
+                val (description, symbol) = openMeteoCondition(current.optInt("weather_code", 2))
+                val highs = daily.getJSONArray("temperature_2m_max")
+                val lows = daily.getJSONArray("temperature_2m_min")
+                val high = if (highs.length() > 0) highs.getDouble(0).toInt() else temp
+                val low = if (lows.length() > 0) lows.getDouble(0).toInt() else temp
+                val forecast = mutableListOf<ForecastDay>()
+                val dates = daily.getJSONArray("time")
+                for (i in 0 until minOf(3, dates.length())) {
+                    val dayLabel = when (i) {
+                        0 -> "Today"
+                        1 -> "Tomorrow"
+                        else -> dates.getString(i).takeLast(2)
+                    }
+                    forecast.add(ForecastDay(dayLabel, highs.getDouble(i).toInt(), lows.getDouble(i).toInt(), description, symbol))
+                }
+                val savedForecast = org.json.JSONArray()
+                forecast.forEach { day ->
+                    savedForecast.put(JSONObject().put("day", day.day).put("high", day.high).put("low", day.low)
+                        .put("description", day.description).put("symbol", day.symbol))
+                }
+                prefs.edit().putInt(KEY_TEMP, temp).putInt(KEY_HIGH, high).putInt(KEY_LOW, low)
+                    .putString(KEY_DESCRIPTION, description).putString(KEY_SYMBOL, symbol)
+                    .putString(KEY_FORECAST, savedForecast.toString()).apply()
+                WeatherSnapshot(temp, high, low, description, symbol, forecast = forecast)
+            }.getOrElse { cached(context) }
         }
     }
 
@@ -137,6 +177,18 @@ object WeatherRepository {
             ForecastDay(if (entry.key == todayKey || index == 0) "Today" else dayLabel.format(date),
                 bucket[1] as Int, bucket[0] as Int, desc, icon)
         }
+    }
+
+    private fun openMeteoCondition(code: Int): Pair<String, String> = when (code) {
+        0 -> "Clear sky" to "☀️"
+        1 -> "Mostly clear" to "🌤️"
+        2 -> "Partly cloudy" to "⛅"
+        3 -> "Cloudy" to "☁️"
+        45, 48 -> "Foggy" to "🌫️"
+        in 51..67, in 80..82 -> "Rain" to "🌧️"
+        in 71..77, 85, 86 -> "Snow" to "❄️"
+        in 95..99 -> "Thunderstorm" to "⛈️"
+        else -> "Current weather" to "🌤️"
     }
 
     private fun condition(code: String): Pair<String, String> {
