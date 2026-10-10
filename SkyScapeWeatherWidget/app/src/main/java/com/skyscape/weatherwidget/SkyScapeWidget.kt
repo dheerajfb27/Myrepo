@@ -47,39 +47,43 @@ class SkyScapeWidget : GlanceAppWidget() {
 /** Native, resizable home-screen widget with live weather, three-day outlook and app shortcuts. */
 class SkyScapeWidgetReceiver : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
-        appWidgetIds.forEach { id -> render(context, manager, id, WeatherRepository.cached(context)) }
+        appWidgetIds.forEach { id -> render(context, manager, id, WeatherRepository.cached(context), false) }
+        // Let the standard AppWidgetProvider update finish first, then request a separate
+        // refresh broadcast. This avoids doing network work in the system update callback.
+        context.sendBroadcast(Intent(context, SkyScapeWidgetReceiver::class.java).setAction(ACTION_REFRESH))
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
-        if (intent.action == ACTION_REFRESH || intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
-            val pending = goAsync()
-            val manager = AppWidgetManager.getInstance(context)
-            val ids = if (intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
-                intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
-                    ?: manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetReceiver::class.java))
-            } else manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetReceiver::class.java))
-            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-                try {
-                    ids.forEach { id -> render(context, manager, id, WeatherRepository.cached(context)) }
-                    val snapshot = WeatherRepository.refresh(context)
-                    ids.forEach { id -> render(context, manager, id, snapshot) }
-                } finally {
-                    pending.finish()
-                }
+        // Standard widget broadcasts must be handled by AppWidgetProvider only.
+        if (intent.action != ACTION_REFRESH) {
+            super.onReceive(context, intent)
+            return
+        }
+
+        val pending = goAsync()
+        val manager = AppWidgetManager.getInstance(context)
+        val ids = manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetReceiver::class.java))
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try {
+                val snapshot = WeatherRepository.refresh(context)
+                ids.forEach { id -> render(context, manager, id, snapshot, false) }
+            } catch (_: Exception) {
+                ids.forEach { id -> render(context, manager, id, WeatherRepository.cached(context), false) }
+            } finally {
+                pending.finish()
             }
         }
     }
 
-    private fun render(context: Context, manager: AppWidgetManager, id: Int, weather: WeatherSnapshot) {
+    private fun render(context: Context, manager: AppWidgetManager, id: Int, weather: WeatherSnapshot, loading: Boolean) {
         val views = RemoteViews(context.packageName, R.layout.skyscape_widget_loading)
         val now = SimpleDateFormat("EEE, d MMM  •  Bengaluru", Locale.US).format(Date())
         views.setTextViewText(R.id.widget_date, now.uppercase(Locale.US))
         views.setTextViewText(R.id.widget_temperature, if (weather.temperature >= 0) "${weather.temperature}°" else "--°")
-        views.setTextViewText(R.id.widget_condition, "${weather.symbol}  ${weather.description}")
+        views.setTextViewText(R.id.widget_condition, if (weather.temperature >= 0) "${weather.symbol}  ${weather.description}" else if (loading) "Connecting to weather…" else "Weather unavailable • tap to retry")
         views.setTextViewText(
             R.id.widget_range,
-            if (weather.high >= 0 && weather.low >= 0) "HIGH ${weather.high}°   •   LOW ${weather.low}°" else "Tap widget to refresh"
+            if (weather.high >= 0 && weather.low >= 0) "HIGH ${weather.high}°   •   LOW ${weather.low}°" else if (loading) "Fetching current conditions…" else "Check internet and tap to retry"
         )
         val forecastIds = listOf(
             Triple(R.id.forecast_day_1, R.id.forecast_icon_1, R.id.forecast_temp_1),
