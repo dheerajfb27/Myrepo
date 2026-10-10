@@ -1,8 +1,14 @@
 package com.skyscape.weatherwidget
 
 import android.os.Bundle
+import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.content.Intent
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -38,8 +43,6 @@ private fun SkyScapeHome() {
             refreshing = true
             try {
                 weather = WeatherRepository.refresh(context)
-                // The home-screen widget is a native RemoteViews AppWidget, not a Glance widget.
-                // Ask its receiver to render the fresh snapshot already saved by the repository.
                 context.sendBroadcast(
                     Intent(context, SkyScapeWidgetReceiver::class.java)
                         .setAction("com.skyscape.weatherwidget.ACTION_RENDER_CACHED")
@@ -61,9 +64,9 @@ private fun SkyScapeHome() {
             Text("WEATHER WIDGET", color = Color(0xFF79D9FF), letterSpacing = 3.sp, fontSize = 12.sp)
             Text("Nature on your home screen", color = Color(0xFFD0D9E1), fontSize = 16.sp)
             GlassWeatherPreview(weather)
-            Text("A scenic road, rainbow accents and a 3-day forecast.", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+            Text("A scenic road, rainbow accents and a 5-day forecast.", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
             Text(
-                "Add the resizable SkyScape widget from your Pixel home-screen widget picker. Weather data and the 3-day outlook are provided by MET Norway for Bengaluru.",
+                "The preview animates gently. Android home-screen widgets use launcher-hosted RemoteViews, so continuous motion is restricted; the widget keeps weather updates battery-friendly.",
                 color = Color(0xFFADB8C4), fontSize = 14.sp, lineHeight = 21.sp
             )
             Button(
@@ -74,22 +77,42 @@ private fun SkyScapeHome() {
                 Text(if (refreshing) "Refreshing weather…" else "Refresh weather")
             }
             Spacer(Modifier.weight(1f))
-            Text("SCENIC ROAD  •  3-DAY FORECAST  •  SHORTCUT DOCK", color = Color(0xFF79D9FF), fontSize = 10.sp, letterSpacing = 1.sp)
+            Text("SCENIC ROAD  •  5-DAY FORECAST  •  SHORTCUT DOCK", color = Color(0xFF79D9FF), fontSize = 10.sp, letterSpacing = 1.sp)
         }
     }
 }
 
 @Composable
 private fun GlassWeatherPreview(weather: WeatherSnapshot) {
+    val transition = rememberInfiniteTransition(label = "scenic-motion")
+    val drift = transition.animateFloat(
+        initialValue = -5f,
+        targetValue = 5f,
+        animationSpec = infiniteRepeatable(animation = tween(durationMillis = 2200), repeatMode = RepeatMode.Reverse),
+        label = "bird-drift"
+    )
+    val glow = transition.animateFloat(
+        initialValue = 0.72f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(animation = tween(durationMillis = 1800), repeatMode = RepeatMode.Reverse),
+        label = "sky-glow"
+    )
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp)
-            .background(Brush.linearGradient(listOf(Color(0xFF283944), Color(0xE6090D13), Color(0xFF15212B))), RoundedCornerShape(28.dp))
+            .background(
+                Brush.linearGradient(listOf(
+                    Color(0xFF283944).copy(alpha = glow.value),
+                    Color(0xE6090D13),
+                    Color(0xFF15212B).copy(alpha = glow.value)
+                )),
+                RoundedCornerShape(28.dp)
+            )
             .padding(18.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("🌳  🐦  ☁️", fontSize = 28.sp)
+            Text("🌳   🐦   ☁️", modifier = Modifier.offset(x = drift.value.dp), color = Color.White, fontSize = 28.sp)
             Text("Nature scene", color = Color(0xFFB5C5D1), fontSize = 12.sp)
             Text("SkyScape glass", color = Color.White, fontWeight = FontWeight.Medium)
             Text(weather.description, color = Color(0xFF9FC9E3), fontSize = 12.sp)
