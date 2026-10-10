@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_refresh"
     android:layout_width="match_parent"
@@ -11,7 +12,7 @@
         android:id="@+id/widget_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="SKYSCAPE  •  BENGALURU"
+        android:text="SKYSCAPE • BENGALURU"
         android:textColor="#FFBFEFFF"
         android:textSize="10sp"
         android:letterSpacing="0.08"
@@ -23,7 +24,6 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingTop="2dp">
-
         <TextView
             android:id="@+id/widget_temperature"
             android:layout_width="wrap_content"
@@ -32,14 +32,12 @@
             android:textColor="#FFFFFFFF"
             android:textSize="34sp"
             android:fontFamily="sans-serif-light" />
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
             android:paddingStart="10dp">
-
             <TextView
                 android:id="@+id/widget_condition"
                 android:layout_width="match_parent"
@@ -48,12 +46,11 @@
                 android:textColor="#FFF0F7FF"
                 android:textSize="13sp"
                 android:fontFamily="sans-serif-medium" />
-
             <TextView
                 android:id="@+id/widget_range"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="H --°  •  L --°"
+                android:text="H --° • L --°"
                 android:textColor="#FFB8C9D8"
                 android:textSize="10sp" />
         </LinearLayout>
@@ -67,7 +64,6 @@
         android:gravity="center_vertical"
         android:layout_marginTop="4dp"
         android:background="@drawable/skyscape_road_strip">
-
         <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="🌄" android:textSize="12sp" />
         <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="━━━━" android:textColor="#FFF7F4D0" android:textSize="10sp" />
         <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="🌈" android:textSize="12sp" />
@@ -80,33 +76,43 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="3dp"
-        android:text="3-DAY OUTLOOK"
+        android:text="5-DAY OUTLOOK"
         android:textColor="#FF79D9FF"
         android:textSize="9sp"
         android:letterSpacing="0.1"
         android:fontFamily="sans-serif-medium" />
 
     <LinearLayout
+        android:id="@+id/widget_forecast_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingTop="2dp">
-
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-            <TextView android:id="@+id/forecast_day_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today" android:textColor="#FFB8C9D8" android:textSize="9sp" />
-            <TextView android:id="@+id/forecast_icon_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="13sp" />
-            <TextView android:id="@+id/forecast_temp_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--° / --°" android:textColor="#FFFFFFFF" android:textSize="9sp" />
+            <TextView android:id="@+id/forecast_day_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today" android:textColor="#FFB8C9D8" android:textSize="8sp" />
+            <TextView android:id="@+id/forecast_icon_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☀️" android:textSize="12sp" />
+            <TextView android:id="@+id/forecast_temp_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--°/--°" android:textColor="#FFFFFFFF" android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-            <TextView android:id="@+id/forecast_day_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tomorrow" android:textColor="#FFB8C9D8" android:textSize="9sp" />
-            <TextView android:id="@+id/forecast_icon_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⛅" android:textSize="13sp" />
-            <TextView android:id="@+id/forecast_temp_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--° / --°" android:textColor="#FFFFFFFF" android:textSize="9sp" />
+            <TextView android:id="@+id/forecast_day_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tmrw" android:textColor="#FFB8C9D8" android:textSize="8sp" />
+            <TextView android:id="@+id/forecast_icon_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⛅" android:textSize="12sp" />
+            <TextView android:id="@+id/forecast_temp_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--°/--°" android:textColor="#FFFFFFFF" android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-            <TextView android:id="@+id/forecast_day_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Day 3" android:textColor="#FFB8C9D8" android:textSize="9sp" />
-            <TextView android:id="@+id/forecast_icon_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🌦️" android:textSize="13sp" />
-            <TextView android:id="@+id/forecast_temp_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--° / --°" android:textColor="#FFFFFFFF" android:textSize="9sp" />
+            <TextView android:id="@+id/forecast_day_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wed" android:textColor="#FFB8C9D8" android:textSize="8sp" />
+            <TextView android:id="@+id/forecast_icon_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🌦️" android:textSize="12sp" />
+            <TextView android:id="@+id/forecast_temp_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--°/--°" android:textColor="#FFFFFFFF" android:textSize="8sp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+            <TextView android:id="@+id/forecast_day_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Thu" android:textColor="#FFB8C9D8" android:textSize="8sp" />
+            <TextView android:id="@+id/forecast_icon_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="☁️" android:textSize="12sp" />
+            <TextView android:id="@+id/forecast_temp_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--°/--°" android:textColor="#FFFFFFFF" android:textSize="8sp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+            <TextView android:id="@+id/forecast_day_5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Fri" android:textColor="#FFB8C9D8" android:textSize="8sp" />
+            <TextView android:id="@+id/forecast_icon_5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🌤️" android:textSize="12sp" />
+            <TextView android:id="@+id/forecast_temp_5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--°/--°" android:textColor="#FFFFFFFF" android:textSize="8sp" />
         </LinearLayout>
     </LinearLayout>
 
