@@ -43,7 +43,7 @@ class SkyScapeWidgetReceiver : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
         // Always replace the XML placeholder immediately, then fetch weather asynchronously.
         val cached = WeatherRepository.cached(context)
-        appWidgetIds.forEach { id -> render(context, manager, id, cached, cached.temperature < 0) }
+        appWidgetIds.forEach { id -> render(context, manager, id, cached, false) }
         requestRefresh(context)
     }
 
