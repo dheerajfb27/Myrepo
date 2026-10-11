@@ -175,6 +175,13 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                 val lows = daily.getJSONArray("temperature_2m_min")
                 for (i in 0 until minOf(7, dates.length())) {
                     val cell = RemoteViews(context.packageName, R.layout.widget_forecast_cell)
+                    if (context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getString("skin", "coffee") == "glass_green") {
+                        cell.setInt(R.id.forecast_day, "setTextColor", android.graphics.Color.rgb(168, 217, 154))
+                        cell.setTextColor(R.id.forecast_icon, android.graphics.Color.rgb(154, 255, 87))
+                        cell.setTextColor(R.id.forecast_high, android.graphics.Color.rgb(240, 255, 232))
+                        cell.setTextColor(R.id.forecast_low, android.graphics.Color.rgb(168, 217, 154))
+                        cell.setInt(R.id.forecast_day, "setBackgroundColor", android.graphics.Color.rgb(18, 53, 34))
+                    }
                     applyForecastSkin(context, cell)
                     val dayLabel = if (i == 0) "Today" else try {
                         SimpleDateFormat("EEE", Locale.getDefault()).format(
@@ -278,14 +285,6 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             views.setTextColor(R.id.updated, muted)
             views.setTextColor(R.id.high_low, muted)
             views.setTextColor(R.id.aqi_detail, muted)
-            for (i in 0..6) {
-                val cell = RemoteViews(context.packageName, R.layout.widget_forecast_cell)
-                cell.setInt(R.id.forecast_day, "setTextColor", muted)
-                cell.setTextColor(R.id.forecast_icon, accent)
-                cell.setTextColor(R.id.forecast_high, text)
-                cell.setTextColor(R.id.forecast_low, muted)
-                cell.setInt(android.R.id.background, "setBackgroundColor", panel)
-            }
         }
 
         private fun condition(code: Int): String = when (code) {
