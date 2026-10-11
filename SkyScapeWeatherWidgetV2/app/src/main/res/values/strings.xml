@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">SkyScape Weather</string>
+    <string name="widget_description">Black glass weather widget with live forecast</string>
+</resources>
