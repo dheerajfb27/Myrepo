@@ -111,6 +111,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:id="@+id/metrics_row"
         android:background="@drawable/widget_metric_background"
         android:orientation="horizontal"
         android:gravity="center_vertical"
@@ -136,6 +137,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="7dp"
+        android:id="@+id/air_row"
         android:background="@drawable/widget_metric_background"
         android:orientation="horizontal"
         android:padding="8dp">
