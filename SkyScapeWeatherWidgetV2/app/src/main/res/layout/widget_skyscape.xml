@@ -113,18 +113,22 @@
         android:layout_marginTop="10dp"
         android:background="@drawable/widget_metric_background"
         android:orientation="horizontal"
-        android:padding="9dp">
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:paddingStart="9dp"
+        android:paddingEnd="9dp"
+        android:paddingTop="7dp"
+        android:paddingBottom="7dp">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="HUMIDITY" android:textColor="#FFBCA28C" android:textSize="8sp"/>
-            <TextView android:id="@+id/humidity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--%" android:textColor="#FFE8D8C4" android:textSize="12sp"/>
+            <TextView android:id="@+id/humidity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--%" android:textColor="#FFE8D8C4" android:textSize="12sp" android:textStyle="bold" android:maxLines="1"/>
         </LinearLayout>
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="UV INDEX" android:textColor="#FFBCA28C" android:textSize="8sp"/>
-            <TextView android:id="@+id/uv" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFD4A373" android:textSize="12sp"/>
+            <TextView android:id="@+id/uv" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFD4A373" android:textSize="12sp" android:textStyle="bold" android:maxLines="1"/>
         </LinearLayout>
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PRESSURE" android:textColor="#FFBCA28C" android:textSize="8sp"/>
-            <TextView android:id="@+id/pressure" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="---- hPa" android:textColor="#FFE8D8C4" android:textSize="12sp"/>
+            <TextView android:id="@+id/pressure" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="---- hPa" android:textColor="#FFE8D8C4" android:textSize="12sp" android:textStyle="bold" android:maxLines="1"/>
         </LinearLayout>
     </LinearLayout>
 
