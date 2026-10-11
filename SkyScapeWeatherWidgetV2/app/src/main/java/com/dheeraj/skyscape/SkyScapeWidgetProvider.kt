@@ -41,6 +41,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_skyscape)
             applySkin(context, views)
             views.setTextViewText(R.id.updated, "Updating weather…")
+            applySkin(context, views)
             val refresh = Intent(context, SkyScapeWidgetProvider::class.java).setAction(ACTION_REFRESH)
             val pending = PendingIntent.getBroadcast(
                 context, id, refresh,
@@ -165,6 +166,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.humidity, "${current.getInt("relative_humidity_2m")}%")
                 views.setTextViewText(R.id.uv, current.optDouble("uv_index", 0.0).roundToInt().toString())
                 views.setTextViewText(R.id.pressure, "${current.getDouble("surface_pressure").roundToInt()} hPa")
+                applySkin(context, views)
                 val row = RemoteViews(context.packageName, R.layout.widget_forecast_cell)
                 views.removeAllViews(R.id.forecast_row)
                 val dates = daily.getJSONArray("time")
@@ -238,6 +240,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetProvider::class.java)).forEach { id ->
                 val views = RemoteViews(context.packageName, R.layout.widget_skyscape)
                 views.setTextViewText(R.id.updated, "Weather unavailable · tap refresh")
+                applySkin(context, views)
                 views.setTextViewText(R.id.condition, "Check internet connection")
                 val intent = Intent(context, SkyScapeWidgetProvider::class.java).setAction(ACTION_REFRESH)
                 views.setOnClickPendingIntent(R.id.refresh, PendingIntent.getBroadcast(
@@ -249,6 +252,39 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 ))
                 manager.updateAppWidget(id, views)
+            }
+        }
+
+        private fun applySkin(context: Context, views: RemoteViews) {
+            val green = context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE)
+                .getString("skin", "coffee") == "glass_green"
+            if (!green) return
+            val bg = android.graphics.Color.rgb(7, 29, 19)
+            val panel = android.graphics.Color.rgb(18, 53, 34)
+            val accent = android.graphics.Color.rgb(154, 255, 87)
+            val text = android.graphics.Color.rgb(240, 255, 232)
+            val muted = android.graphics.Color.rgb(168, 217, 154)
+            listOf(R.id.widget_root).forEach { views.setInt(it, "setBackgroundColor", bg) }
+            listOf(R.id.weather_metrics_row, R.id.air_row, R.id.refresh).forEach {
+                views.setInt(it, "setBackgroundColor", panel)
+            }
+            listOf(R.id.location, R.id.weather_icon, R.id.wind, R.id.uv, R.id.aqi).forEach {
+                views.setTextColor(it, accent)
+            }
+            listOf(R.id.updated, R.id.temperature, R.id.condition, R.id.high_low, R.id.feels_like,
+                R.id.humidity, R.id.pressure, R.id.co2, R.id.aqi_detail).forEach {
+                views.setTextColor(it, text)
+            }
+            views.setTextColor(R.id.updated, muted)
+            views.setTextColor(R.id.high_low, muted)
+            views.setTextColor(R.id.aqi_detail, muted)
+            for (i in 0..6) {
+                val cell = RemoteViews(context.packageName, R.layout.widget_forecast_cell)
+                cell.setInt(R.id.forecast_day, "setTextColor", muted)
+                cell.setTextColor(R.id.forecast_icon, accent)
+                cell.setTextColor(R.id.forecast_high, text)
+                cell.setTextColor(R.id.forecast_low, muted)
+                cell.setInt(android.R.id.background, "setBackgroundColor", panel)
             }
         }
 
