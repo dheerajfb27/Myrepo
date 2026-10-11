@@ -21,7 +21,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="⌖ Bengaluru"
-                android:textColor="#FF8CCBFF"
+                android:textColor="#FFD4A373"
                 android:textSize="15sp"
                 android:textStyle="bold" />
             <TextView
@@ -29,7 +29,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Checking weather…"
-                android:textColor="#B8D0E8"
+                android:textColor="#FFE8D8C4"
                 android:textSize="10sp" />
         </LinearLayout>
         <TextView
@@ -38,7 +38,7 @@
             android:layout_height="38dp"
             android:gravity="center"
             android:text="⟳"
-            android:textColor="#FF8CCBFF"
+            android:textColor="#FFD4A373"
             android:textSize="25sp"
             android:background="@drawable/widget_metric_background" />
     </LinearLayout>
@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="☀"
-            android:textColor="#FFFFD36A"
+            android:textColor="#FFD4A373"
             android:textSize="43sp" />
         <LinearLayout
             android:layout_width="0dp"
@@ -67,7 +67,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="--°"
-                android:textColor="#FFFFFFFF"
+                android:textColor="#FFE8D8C4"
                 android:textSize="42sp"
                 android:fontFamily="sans" />
             <TextView
@@ -75,14 +75,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Waiting for weather data"
-                android:textColor="#FFE5F0FF"
+                android:textColor="#FFE8D8C4"
                 android:textSize="13sp" />
             <TextView
                 android:id="@+id/high_low"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="H --°  ·  L --°"
-                android:textColor="#FF9DBBE1"
+                android:textColor="#FFBCA28C"
                 android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
@@ -95,14 +95,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Feels --°"
-                android:textColor="#FFD5E4F8"
+                android:textColor="#FFE8D8C4"
                 android:textSize="11sp" />
             <TextView
                 android:id="@+id/wind"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Wind --"
-                android:textColor="#FF8CCBFF"
+                android:textColor="#FFD4A373"
                 android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
@@ -115,16 +115,16 @@
         android:orientation="horizontal"
         android:padding="9dp">
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="HUMIDITY" android:textColor="#FF9DBBE1" android:textSize="8sp"/>
-            <TextView android:id="@+id/humidity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--%" android:textColor="#FFFFFFFF" android:textSize="12sp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="HUMIDITY" android:textColor="#FFBCA28C" android:textSize="8sp"/>
+            <TextView android:id="@+id/humidity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--%" android:textColor="#FFE8D8C4" android:textSize="12sp"/>
         </LinearLayout>
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="UV INDEX" android:textColor="#FF9DBBE1" android:textSize="8sp"/>
-            <TextView android:id="@+id/uv" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFFFD36A" android:textSize="12sp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="UV INDEX" android:textColor="#FFBCA28C" android:textSize="8sp"/>
+            <TextView android:id="@+id/uv" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFD4A373" android:textSize="12sp"/>
         </LinearLayout>
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PRESSURE" android:textColor="#FF9DBBE1" android:textSize="8sp"/>
-            <TextView android:id="@+id/pressure" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="---- hPa" android:textColor="#FFFFFFFF" android:textSize="12sp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PRESSURE" android:textColor="#FFBCA28C" android:textSize="8sp"/>
+            <TextView android:id="@+id/pressure" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="---- hPa" android:textColor="#FFE8D8C4" android:textSize="12sp"/>
         </LinearLayout>
     </LinearLayout>
 
@@ -133,7 +133,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="7-DAY FORECAST"
-        android:textColor="#FFFFFFFF"
+        android:textColor="#FFE8D8C4"
         android:textStyle="bold"
         android:textSize="11sp" />
 
