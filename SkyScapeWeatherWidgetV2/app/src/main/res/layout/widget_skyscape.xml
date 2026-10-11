@@ -140,7 +140,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="AIR QUALITY (EU AQI)" android:textColor="#FFBCA28C" android:textSize="8sp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CITY AQI (US SCALE)" android:textColor="#FFBCA28C" android:textSize="8sp"/>
             <TextView android:id="@+id/aqi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFD4A373" android:textSize="14sp" android:textStyle="bold"/>
             <TextView android:id="@+id/aqi_detail" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Loading air data…" android:textColor="#FFE8D8C4" android:textSize="8sp"/>
         </LinearLayout>
