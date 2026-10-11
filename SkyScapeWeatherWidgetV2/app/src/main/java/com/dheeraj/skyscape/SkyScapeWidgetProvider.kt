@@ -214,7 +214,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             views.setInt(R.id.widget_root, "setBackgroundResource",
                 if (green) R.drawable.widget_glass_green_background else R.drawable.widget_glass_background)
             val panel = if (green) R.drawable.widget_metric_green_background else R.drawable.widget_metric_background
-            views.setInt(R.id.metrics_row, "setBackgroundResource", panel)
+            views.setInt(R.id.weather_metrics_row, "setBackgroundResource", panel)
             views.setInt(R.id.air_row, "setBackgroundResource", panel)
             val primary = if (green) android.graphics.Color.rgb(240, 255, 232) else android.graphics.Color.rgb(232, 216, 196)
             val accent = if (green) android.graphics.Color.rgb(154, 255, 87) else android.graphics.Color.rgb(212, 163, 115)
@@ -260,31 +260,6 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                 ))
                 manager.updateAppWidget(id, views)
             }
-        }
-
-        private fun applySkin(context: Context, views: RemoteViews) {
-            val green = context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE)
-                .getString("skin", "coffee") == "glass_green"
-            if (!green) return
-            val bg = android.graphics.Color.rgb(7, 29, 19)
-            val panel = android.graphics.Color.rgb(18, 53, 34)
-            val accent = android.graphics.Color.rgb(154, 255, 87)
-            val text = android.graphics.Color.rgb(240, 255, 232)
-            val muted = android.graphics.Color.rgb(168, 217, 154)
-            listOf(R.id.widget_root).forEach { views.setInt(it, "setBackgroundColor", bg) }
-            listOf(R.id.weather_metrics_row, R.id.air_row, R.id.refresh).forEach {
-                views.setInt(it, "setBackgroundColor", panel)
-            }
-            listOf(R.id.location, R.id.weather_icon, R.id.wind, R.id.uv, R.id.aqi).forEach {
-                views.setTextColor(it, accent)
-            }
-            listOf(R.id.updated, R.id.temperature, R.id.condition, R.id.high_low, R.id.feels_like,
-                R.id.humidity, R.id.pressure, R.id.co2, R.id.aqi_detail).forEach {
-                views.setTextColor(it, text)
-            }
-            views.setTextColor(R.id.updated, muted)
-            views.setTextColor(R.id.high_low, muted)
-            views.setTextColor(R.id.aqi_detail, muted)
         }
 
         private fun condition(code: Int): String = when (code) {
