@@ -40,81 +40,68 @@ object WeatherRepository {
 
     suspend fun refresh(context: Context): WeatherSnapshot = withContext(Dispatchers.IO) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        var connection: HttpURLConnection? = null
         try {
-            val url = URL("https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=12.9716&lon=77.5946")
-            val connection = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 10000
-                readTimeout = 10000
+            // Open-Meteo is the primary source: no API key and a simple stable JSON schema.
+            val endpoint = "https://api.open-meteo.com/v1/forecast?latitude=12.9716&longitude=77.5946&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia%2FKolkata&forecast_days=5"
+            connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                connectTimeout = 8000
+                readTimeout = 8000
                 requestMethod = "GET"
-                setRequestProperty("User-Agent", "SkyScapeWeatherWidget/0.1.8 (Android weather widget)")
                 setRequestProperty("Accept", "application/json")
+                setRequestProperty("User-Agent", "SkyScapeWeatherWidget/0.1.9")
             }
             val status = connection.responseCode
-            if (status !in 200..299) {
-                connection.disconnect()
-                throw IllegalStateException("MET Norway returned HTTP $status")
+            if (status !in 200..299) throw IllegalStateException("Weather service HTTP $status")
+            val json = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+            val current = json.getJSONObject("current")
+            val daily = json.getJSONObject("daily")
+            val temp = current.getDouble("temperature_2m").toInt()
+            val (description, symbol) = openMeteoCondition(current.optInt("weather_code", 2))
+            val highs = daily.getJSONArray("temperature_2m_max")
+            val lows = daily.getJSONArray("temperature_2m_min")
+            val codes = daily.optJSONArray("weather_code")
+            val dates = daily.getJSONArray("time")
+            val forecast = mutableListOf<ForecastDay>()
+            for (i in 0 until minOf(5, dates.length(), highs.length(), lows.length())) {
+                val date = dates.getString(i)
+                val dayLabel = when (i) {
+                    0 -> "Today"
+                    1 -> "Tmrw"
+                    else -> SimpleDateFormat("EEE", Locale.US).format(
+                        SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(date) ?: Date()
+                    )
+                }
+                val (_, daySymbol) = openMeteoCondition(codes?.optInt(i, 2) ?: 2)
+                forecast.add(
+                    ForecastDay(
+                        dayLabel,
+                        highs.getDouble(i).toInt(),
+                        lows.getDouble(i).toInt(),
+                        description,
+                        daySymbol
+                    )
+                )
             }
-            val body = connection.inputStream.bufferedReader().use { it.readText() }
-            connection.disconnect()
-            val root = JSONObject(body)
-            val series = root.getJSONObject("properties").getJSONArray("timeseries")
-            if (series.length() == 0) throw IllegalStateException("Empty forecast")
-            val firstData = series.getJSONObject(0).getJSONObject("data")
-            val details = firstData.getJSONObject("instant").getJSONObject("details")
-            val temp = details.getDouble("air_temperature").toInt()
-            val symbolCode = firstData.optJSONObject("next_1_hours")?.optJSONObject("summary")?.optString("symbol_code", "cloudy") ?: "cloudy"
-            val (description, symbol) = condition(symbolCode)
-
-            val todayPoints = (0 until minOf(24, series.length())).mapNotNull { i ->
-                series.getJSONObject(i).optJSONObject("data")?.optJSONObject("instant")?.optJSONObject("details")?.optDouble("air_temperature")?.toInt()
-            }
-            val high = todayPoints.maxOrNull() ?: temp
-            val low = todayPoints.minOrNull() ?: temp
-            val forecast = buildForecast(series, temp)
-            val forecastJson = toForecastJson(forecast)
-            prefs.edit().putInt(KEY_TEMP, temp).putInt(KEY_HIGH, high).putInt(KEY_LOW, low)
-                .putString(KEY_DESCRIPTION, description).putString(KEY_SYMBOL, symbol)
-                .putString(KEY_FORECAST, forecastJson.toString()).apply()
+            if (forecast.isEmpty()) throw IllegalStateException("Weather service returned no forecast days")
+            val high = forecast.first().high
+            val low = forecast.first().low
+            prefs.edit()
+                .putInt(KEY_TEMP, temp)
+                .putInt(KEY_HIGH, high)
+                .putInt(KEY_LOW, low)
+                .putString(KEY_DESCRIPTION, description)
+                .putString(KEY_SYMBOL, symbol)
+                .putString(KEY_FORECAST, toForecastJson(forecast).toString())
+                .putString("last_error", "")
+                .apply()
             WeatherSnapshot(temp, high, low, description, symbol, forecast = forecast)
-        } catch (_: Exception) {
-            runCatching {
-                val fallbackUrl = URL("https://api.open-meteo.com/v1/forecast?latitude=12.9716&longitude=77.5946&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Asia%2FKolkata&forecast_days=5")
-                val conn = (fallbackUrl.openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 10000
-                    readTimeout = 10000
-                    requestMethod = "GET"
-                    setRequestProperty("Accept", "application/json")
-                }
-                val status = conn.responseCode
-                if (status !in 200..299) throw IllegalStateException("Fallback weather HTTP $status")
-                val json = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
-                conn.disconnect()
-                val current = json.getJSONObject("current")
-                val daily = json.getJSONObject("daily")
-                val temp = current.getDouble("temperature_2m").toInt()
-                val (description, symbol) = openMeteoCondition(current.optInt("weather_code", 2))
-                val highs = daily.getJSONArray("temperature_2m_max")
-                val lows = daily.getJSONArray("temperature_2m_min")
-                val codes = daily.optJSONArray("weather_code")
-                val dates = daily.getJSONArray("time")
-                val forecast = mutableListOf<ForecastDay>()
-                for (i in 0 until minOf(5, dates.length(), highs.length(), lows.length())) {
-                    val date = dates.getString(i)
-                    val dayLabel = when (i) {
-                        0 -> "Today"
-                        1 -> "Tmrw"
-                        else -> SimpleDateFormat("EEE", Locale.US).format(SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(date) ?: Date())
-                    }
-                    val (dayDesc, daySymbol) = openMeteoCondition(codes?.optInt(i, 2) ?: 2)
-                    forecast.add(ForecastDay(dayLabel, highs.getDouble(i).toInt(), lows.getDouble(i).toInt(), dayDesc.ifBlank { description }, daySymbol.ifBlank { symbol }))
-                }
-                val high = forecast.firstOrNull()?.high ?: temp
-                val low = forecast.firstOrNull()?.low ?: temp
-                prefs.edit().putInt(KEY_TEMP, temp).putInt(KEY_HIGH, high).putInt(KEY_LOW, low)
-                    .putString(KEY_DESCRIPTION, description).putString(KEY_SYMBOL, symbol)
-                    .putString(KEY_FORECAST, toForecastJson(forecast).toString()).apply()
-                WeatherSnapshot(temp, high, low, description, symbol, forecast = forecast)
-            }.getOrElse { cached(context) }
+        } catch (e: Exception) {
+            // Keep the last successful values if offline; don't silently pretend a fetch succeeded.
+            prefs.edit().putString("last_error", e.javaClass.simpleName + ": " + (e.message ?: "request failed")).apply()
+            cached(context)
+        } finally {
+            connection?.disconnect()
         }
     }
 
