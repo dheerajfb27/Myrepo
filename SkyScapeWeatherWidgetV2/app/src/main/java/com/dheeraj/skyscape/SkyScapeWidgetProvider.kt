@@ -54,7 +54,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             executor.execute {
                 try {
                     val endpoint = "https://api.open-meteo.com/v1/forecast" +
-                        "?latitude=12.9716&longitude=77.5946" +
+                        "?latitude=${context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getFloat("latitude", 12.9716f)}&longitude=${context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getFloat("longitude", 77.5946f)}" +
                         "&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,uv_index,surface_pressure" +
                         "&daily=weather_code,temperature_2m_max,temperature_2m_min" +
                         "&timezone=Asia%2FKolkata&forecast_days=7"
@@ -90,7 +90,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             executor.execute {
                 try {
                     val endpoint = "https://air-quality-api.open-meteo.com/v1/air-quality" +
-                        "?latitude=12.9716&longitude=77.5946" +
+                        "?latitude=${context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getFloat("latitude", 12.9716f)}&longitude=${context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getFloat("longitude", 77.5946f)}" +
                         "&hourly=carbon_dioxide,european_aqi,us_aqi" +
                         "&timezone=Asia%2FKolkata&forecast_days=2"
                     val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
@@ -120,9 +120,9 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                     val ids = manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetProvider::class.java))
                     ids.forEach { id ->
                         val views = RemoteViews(context.packageName, R.layout.widget_skyscape)
-                        views.setTextViewText(R.id.aqi, if (euAqi.isNaN()) "--" else "${euAqi.roundToInt()} EU")
+                        views.setTextViewText(R.id.aqi, if (usAqi.isNaN()) "--" else usAqi.roundToInt().toString())
                         views.setTextViewText(R.id.co2, if (co2.isNaN()) "-- ppm" else "${co2.roundToInt()} ppm")
-                        views.setTextViewText(R.id.aqi_detail, if (usAqi.isNaN()) "US AQI ${usAqi.roundToInt()}" else "European AQI")
+                        views.setTextViewText(R.id.aqi_detail, "US AQI scale" + if (euAqi.isNaN()) "" else " • EU ${euAqi.roundToInt()}")
                         manager.partiallyUpdateAppWidget(id, views)
                     }
                 } catch (_: Exception) {
@@ -153,7 +153,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             }.format(Date())
             ids.forEach { id ->
                 val views = RemoteViews(context.packageName, R.layout.widget_skyscape)
-                views.setTextViewText(R.id.location, "⌖ Bengaluru")
+                views.setTextViewText(R.id.location, "⌖ " + context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getString("city", "Bengaluru"))
                 views.setTextViewText(R.id.updated, time + if (stale) " · cached" else " · live")
                 views.setTextViewText(R.id.temperature, "${temp}°")
                 views.setTextViewText(R.id.condition, condition(code))
