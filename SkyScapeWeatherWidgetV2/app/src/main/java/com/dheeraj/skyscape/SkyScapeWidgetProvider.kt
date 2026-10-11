@@ -74,6 +74,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                     context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE)
                         .edit().putString("last_response", response).apply()
                     renderAll(context, json, false)
+            fetchAirQuality(context)
                 } catch (_: Exception) {
                     val cached = context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE)
                         .getString("last_response", null)
@@ -81,6 +82,58 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                         try { renderAll(context, JSONObject(cached), true) }
                         catch (_: Exception) { renderError(context) }
                     } else renderError(context)
+                }
+            }
+        }
+
+        private fun fetchAirQuality(context: Context) {
+            executor.execute {
+                try {
+                    val endpoint = "https://air-quality-api.open-meteo.com/v1/air-quality" +
+                        "?latitude=12.9716&longitude=77.5946" +
+                        "&hourly=carbon_dioxide,european_aqi,us_aqi" +
+                        "&timezone=Asia%2FKolkata&forecast_days=2"
+                    val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                        requestMethod = "GET"
+                        connectTimeout = 10000
+                        readTimeout = 10000
+                        setRequestProperty("Accept", "application/json")
+                    }
+                    val response = try {
+                        if (connection.responseCode !in 200..299) error("Air quality HTTP ${connection.responseCode}")
+                        connection.inputStream.bufferedReader().use { it.readText() }
+                    } finally { connection.disconnect() }
+                    val root = JSONObject(response)
+                    val hourly = root.getJSONObject("hourly")
+                    val times = hourly.getJSONArray("time")
+                    val now = SimpleDateFormat("yyyy-MM-dd'T'HH:00", Locale.US).apply {
+                        timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+                    }.format(Date())
+                    var index = 0
+                    for (i in 0 until times.length()) {
+                        if (times.getString(i) <= now) index = i else break
+                    }
+                    val co2 = hourly.getJSONArray("carbon_dioxide").optDouble(index, Double.NaN)
+                    val euAqi = hourly.getJSONArray("european_aqi").optDouble(index, Double.NaN)
+                    val usAqi = hourly.getJSONArray("us_aqi").optDouble(index, Double.NaN)
+                    val manager = AppWidgetManager.getInstance(context)
+                    val ids = manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetProvider::class.java))
+                    ids.forEach { id ->
+                        val views = RemoteViews(context.packageName, R.layout.widget_skyscape)
+                        views.setTextViewText(R.id.aqi, if (euAqi.isNaN()) "--" else "${euAqi.roundToInt()} EU")
+                        views.setTextViewText(R.id.co2, if (co2.isNaN()) "-- ppm" else "${co2.roundToInt()} ppm")
+                        views.setTextViewText(R.id.aqi_detail, if (usAqi.isNaN()) "US AQI ${usAqi.roundToInt()}" else "European AQI")
+                        manager.partiallyUpdateAppWidget(id, views)
+                    }
+                } catch (_: Exception) {
+                    val manager = AppWidgetManager.getInstance(context)
+                    manager.getAppWidgetIds(ComponentName(context, SkyScapeWidgetProvider::class.java)).forEach { id ->
+                        val views = RemoteViews(context.packageName, R.layout.widget_skyscape)
+                        views.setTextViewText(R.id.aqi, "--")
+                        views.setTextViewText(R.id.co2, "-- ppm")
+                        views.setTextViewText(R.id.aqi_detail, "Air data unavailable")
+                        manager.partiallyUpdateAppWidget(id, views)
+                    }
                 }
             }
         }
