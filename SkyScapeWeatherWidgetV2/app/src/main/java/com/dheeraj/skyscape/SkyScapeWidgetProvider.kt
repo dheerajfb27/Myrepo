@@ -39,10 +39,8 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
 
         private fun showLoading(context: Context, manager: AppWidgetManager, id: Int) {
             val views = RemoteViews(context.packageName, R.layout.widget_skyscape)
-            applySkin(views, context)
             applySkin(context, views)
             views.setTextViewText(R.id.updated, "Updating weather…")
-            applySkin(context, views)
             val refresh = Intent(context, SkyScapeWidgetProvider::class.java).setAction(ACTION_REFRESH)
             val pending = PendingIntent.getBroadcast(
                 context, id, refresh,
@@ -198,19 +196,6 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                 val lows = daily.getJSONArray("temperature_2m_min")
                 for (i in 0 until minOf(7, dates.length())) {
                     val cell = RemoteViews(context.packageName, R.layout.widget_forecast_cell)
-                    val greenSkin = context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getString("skin", "coffee") == "glass_green"
-                    cell.setInt(R.id.forecast_day, "setTextColor", if (greenSkin) android.graphics.Color.rgb(240, 255, 232) else android.graphics.Color.rgb(232, 216, 196))
-                    cell.setInt(R.id.forecast_icon, "setTextColor", if (greenSkin) android.graphics.Color.rgb(154, 255, 87) else android.graphics.Color.rgb(212, 163, 115))
-                    cell.setInt(R.id.forecast_high, "setTextColor", if (greenSkin) android.graphics.Color.rgb(240, 255, 232) else android.graphics.Color.rgb(232, 216, 196))
-                    cell.setInt(R.id.forecast_low, "setTextColor", if (greenSkin) android.graphics.Color.rgb(168, 217, 154) else android.graphics.Color.rgb(188, 162, 140))
-                    cell.setInt(R.id.forecast_cell_root, "setBackgroundResource", if (greenSkin) R.drawable.widget_metric_background_green else R.drawable.widget_metric_background)
-                    if (context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getString("skin", "coffee") == "glass_green") {
-                        cell.setInt(R.id.forecast_day, "setTextColor", android.graphics.Color.rgb(168, 217, 154))
-                        cell.setTextColor(R.id.forecast_icon, android.graphics.Color.rgb(154, 255, 87))
-                        cell.setTextColor(R.id.forecast_high, android.graphics.Color.rgb(240, 255, 232))
-                        cell.setTextColor(R.id.forecast_low, android.graphics.Color.rgb(168, 217, 154))
-                        cell.setInt(R.id.forecast_day, "setBackgroundColor", android.graphics.Color.rgb(18, 53, 34))
-                    }
                     applyForecastSkin(context, cell)
                     val dayLabel = if (i == 0) "Today" else try {
                         SimpleDateFormat("EEE", Locale.getDefault()).format(
@@ -234,41 +219,52 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             }
         }
 
-        private fun isGlassGreen(context: Context): Boolean =
-            context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE)
-                .getString("skin", "coffee") == "glass_green"
+        private data class Skin(
+            val root: Int, val metric: Int, val primary: Int, val accent: Int, val muted: Int
+        )
+
+        private fun selectedSkin(context: Context): Skin {
+            val name = context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE)
+                .getString("skin", "coffee")
+            return when (name) {
+                "glass_green" -> Skin(R.drawable.widget_glass_green_background, R.drawable.widget_metric_green_background,
+                    android.graphics.Color.rgb(240,255,232), android.graphics.Color.rgb(154,255,87), android.graphics.Color.rgb(168,217,154))
+                "amoled" -> Skin(R.drawable.widget_glass_amoled, R.drawable.widget_metric_amoled,
+                    android.graphics.Color.rgb(239,246,255), android.graphics.Color.rgb(53,230,255), android.graphics.Color.rgb(156,180,207))
+                "arctic" -> Skin(R.drawable.widget_glass_arctic, R.drawable.widget_metric_arctic,
+                    android.graphics.Color.rgb(231,249,255), android.graphics.Color.rgb(139,233,255), android.graphics.Color.rgb(164,207,224))
+                "sunset" -> Skin(R.drawable.widget_glass_sunset, R.drawable.widget_metric_sunset,
+                    android.graphics.Color.rgb(255,239,230), android.graphics.Color.rgb(255,155,113), android.graphics.Color.rgb(232,177,190))
+                "rose" -> Skin(R.drawable.widget_glass_rose, R.drawable.widget_metric_rose,
+                    android.graphics.Color.rgb(255,239,249), android.graphics.Color.rgb(255,139,203), android.graphics.Color.rgb(224,174,207))
+                else -> Skin(R.drawable.widget_glass_background, R.drawable.widget_metric_background,
+                    android.graphics.Color.rgb(232,216,196), android.graphics.Color.rgb(212,163,115), android.graphics.Color.rgb(188,162,140))
+            }
+        }
 
         private fun applySkin(context: Context, views: RemoteViews) {
-            val green = isGlassGreen(context)
-            views.setInt(R.id.widget_root, "setBackgroundResource",
-                if (green) R.drawable.widget_glass_green_background else R.drawable.widget_glass_background)
-            val panel = if (green) R.drawable.widget_metric_green_background else R.drawable.widget_metric_background
-            views.setInt(R.id.weather_metrics_row, "setBackgroundResource", panel)
-            views.setInt(R.id.air_row, "setBackgroundResource", panel)
-            val primary = if (green) android.graphics.Color.rgb(240, 255, 232) else android.graphics.Color.rgb(232, 216, 196)
-            val accent = if (green) android.graphics.Color.rgb(154, 255, 87) else android.graphics.Color.rgb(212, 163, 115)
-            val muted = if (green) android.graphics.Color.rgb(168, 217, 154) else android.graphics.Color.rgb(188, 162, 140)
+            val skin = selectedSkin(context)
+            views.setInt(R.id.widget_root, "setBackgroundResource", skin.root)
+            views.setInt(R.id.weather_metrics_row, "setBackgroundResource", skin.metric)
+            views.setInt(R.id.air_row, "setBackgroundResource", skin.metric)
+            views.setInt(R.id.refresh, "setBackgroundResource", skin.metric)
             listOf(R.id.updated, R.id.temperature, R.id.condition, R.id.feels_like,
                 R.id.weather_insight, R.id.humidity, R.id.pressure, R.id.co2, R.id.aqi_detail).forEach {
-                views.setTextColor(it, primary)
+                views.setTextColor(it, skin.primary)
             }
             listOf(R.id.location, R.id.refresh, R.id.weather_icon, R.id.wind, R.id.uv, R.id.aqi).forEach {
-                views.setTextColor(it, accent)
+                views.setTextColor(it, skin.accent)
             }
-            views.setTextColor(R.id.high_low, muted)
+            views.setTextColor(R.id.high_low, skin.muted)
         }
 
         private fun applyForecastSkin(context: Context, cell: RemoteViews) {
-            val green = isGlassGreen(context)
-            cell.setInt(R.id.forecast_cell_root, "setBackgroundResource",
-                if (green) R.drawable.widget_metric_green_background else R.drawable.widget_metric_background)
-            val primary = if (green) android.graphics.Color.rgb(240, 255, 232) else android.graphics.Color.rgb(232, 216, 196)
-            val accent = if (green) android.graphics.Color.rgb(154, 255, 87) else android.graphics.Color.rgb(212, 163, 115)
-            val muted = if (green) android.graphics.Color.rgb(168, 217, 154) else android.graphics.Color.rgb(188, 162, 140)
-            cell.setTextColor(R.id.forecast_day, primary)
-            cell.setTextColor(R.id.forecast_icon, accent)
-            cell.setTextColor(R.id.forecast_high, primary)
-            cell.setTextColor(R.id.forecast_low, muted)
+            val skin = selectedSkin(context)
+            cell.setInt(R.id.forecast_cell_root, "setBackgroundResource", skin.metric)
+            cell.setTextColor(R.id.forecast_day, skin.muted)
+            cell.setTextColor(R.id.forecast_icon, skin.accent)
+            cell.setTextColor(R.id.forecast_high, skin.primary)
+            cell.setTextColor(R.id.forecast_low, skin.muted)
         }
 
         private fun renderError(context: Context) {
