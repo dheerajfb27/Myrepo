@@ -118,7 +118,6 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
         val temp = current.optDouble("temperature_2m", Double.NaN)
         val feels = current.optDouble("apparent_temperature", Double.NaN)
         val wind = current.optDouble("wind_speed_10m", Double.NaN)
-        val daily = json.optJSONObject("daily")
         val high = daily?.optJSONArray("temperature_2m_max")?.optDouble(0, Double.NaN) ?: Double.NaN
         val low = daily?.optJSONArray("temperature_2m_min")?.optDouble(0, Double.NaN) ?: Double.NaN
         val date = java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale.getDefault()).apply {
