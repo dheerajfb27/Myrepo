@@ -43,6 +43,16 @@
             android:textColor="#FFA8D99A"
             android:textSize="9sp"
             android:maxLines="1" />
+        <TextView
+            android:id="@+id/compact_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lovely weather"
+            android:textColor="#FF9AFF57"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
     </LinearLayout>
 
     <TextView
