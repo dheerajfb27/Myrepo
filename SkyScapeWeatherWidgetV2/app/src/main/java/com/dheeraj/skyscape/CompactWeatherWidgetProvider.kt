@@ -87,7 +87,7 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
                 val lat = prefs.getFloat("latitude", 12.9716f)
                 val lon = prefs.getFloat("longitude", 77.5946f)
                 val endpoint = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon" +
-                    "&current=temperature_2m,apparent_temperature,is_day,weather_code" +
+                    "&current=temperature_2m,apparent_temperature,is_day,weather_code,wind_speed_10m" +
                     "&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FKolkata&forecast_days=1"
                 val connection = URL(endpoint).openConnection() as HttpURLConnection
                 connection.connectTimeout = 10000
@@ -115,11 +115,24 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
         val code = current.optInt("weather_code", -1)
         val city = context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE)
             .getString("city", "Bengaluru") ?: "Bengaluru"
+        val temp = current.optDouble("temperature_2m", Double.NaN)
+        val feels = current.optDouble("apparent_temperature", Double.NaN)
+        val wind = current.optDouble("wind_speed_10m", Double.NaN)
+        val daily = json.optJSONObject("daily")
+        val high = daily?.optJSONArray("temperature_2m_max")?.optDouble(0, Double.NaN) ?: Double.NaN
+        val low = daily?.optJSONArray("temperature_2m_min")?.optDouble(0, Double.NaN) ?: Double.NaN
+        val date = java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale.getDefault()).apply {
+            timeZone = java.util.TimeZone.getTimeZone("Asia/Kolkata")
+        }.format(java.util.Date())
         ids.forEach { id ->
             val views = RemoteViews(context.packageName, R.layout.widget_weather_compact)
             skinViews(context, views)
             views.setTextViewText(R.id.compact_city, "⌖ $city")
-            views.setTextViewText(R.id.compact_temp, "${current.optDouble("temperature_2m", Double.NaN).let { if (it.isNaN()) "--" else it.roundToInt().toString() }}°")
+            views.setTextViewText(R.id.compact_date, date + if (stale) " · cached" else "")
+            views.setTextViewText(R.id.compact_temp, "${if (temp.isNaN()) "--" else temp.roundToInt().toString()}°")
+            views.setTextViewText(R.id.compact_feels, "Feels ${if (feels.isNaN()) "--" else feels.roundToInt().toString()}°")
+            views.setTextViewText(R.id.compact_wind, "Wind ${if (wind.isNaN()) "--" else wind.roundToInt().toString()} km/h")
+            views.setTextViewText(R.id.compact_high_low, "H ${if (high.isNaN()) "--" else high.roundToInt().toString()}° · L ${if (low.isNaN()) "--" else low.roundToInt().toString()}°")
             views.setTextViewText(R.id.compact_icon, weatherIcon(code, current.optInt("is_day", 1) == 1))
             val click = pending(context, id)
             views.setOnClickPendingIntent(R.id.compact_refresh, click)
