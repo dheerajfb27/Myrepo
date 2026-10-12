@@ -27,6 +27,26 @@ class MainActivity : Activity() {
     private val accents = intArrayOf(Color.rgb(212,163,115), Color.rgb(154,255,87), Color.rgb(53,230,255), Color.rgb(139,233,255), Color.rgb(255,155,113), Color.rgb(255,139,203))
     private val texts = intArrayOf(Color.rgb(232,216,196), Color.rgb(240,255,232), Color.rgb(239,246,255), Color.rgb(231,249,255), Color.rgb(255,239,230), Color.rgb(255,239,249))
 
+    private fun themedSpinnerAdapter(items: Array<String>, primary: Int, accent: Int): ArrayAdapter<String> {
+        return object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
+            private fun style(view: android.view.View, color: Int): android.view.View {
+                val label = view as TextView
+                label.setTextColor(color)
+                label.textSize = 16f
+                label.setPadding(12, 12, 12, 12)
+                return label
+            }
+
+            override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
+                return style(super.getView(position, convertView, parent), primary)
+            }
+
+            override fun getDropDownView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
+                return style(super.getDropDownView(position, convertView, parent), accent)
+            }
+        }.also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val prefs = getSharedPreferences("weather_cache", MODE_PRIVATE)
@@ -59,7 +79,7 @@ class MainActivity : Activity() {
             setTextColor(text)
         })
         val skinSpinner = Spinner(this)
-        skinSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, skinNames)
+        skinSpinner.adapter = themedSpinnerAdapter(skinNames, text, accent)
         skinSpinner.setSelection(currentSkin)
         root.addView(skinSpinner)
 
@@ -70,7 +90,7 @@ class MainActivity : Activity() {
             setPadding(0, 20, 0, 0)
         })
         val citySpinner = Spinner(this)
-        citySpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, cityNames)
+        citySpinner.adapter = themedSpinnerAdapter(cityNames, text, accent)
         citySpinner.setSelection(cityNames.indexOf(prefs.getString("city", "Bengaluru")).coerceAtLeast(0))
         root.addView(citySpinner)
 
@@ -95,6 +115,8 @@ class MainActivity : Activity() {
                 .putFloat("longitude", coordinates[cityIndex][1].toFloat()).apply()
             sendBroadcast(Intent(this, SkyScapeWidgetProvider::class.java).setAction("com.dheeraj.skyscape.REFRESH"))
             save.text = "SAVED • WIDGET REFRESHING"
+            save.setTextColor(texts[skinIndex])
+            save.setBackgroundColor(accents[skinIndex])
         }
         root.addView(TextView(this).apply {
             this.text = "Glass Green is the signature emerald look. AMOLED Neon, Arctic Blue, Sunset Glow and Rose Quartz are extra themes. AQI currently uses the US AQI scale (not India's CPCB scale); CO₂ is a modelled outdoor estimate. Add or resize the widget from your home screen: long-press → Widgets → SkyScape Weather."
