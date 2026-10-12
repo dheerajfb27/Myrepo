@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">SkyScape Weather</string>
     <string name="widget_description">Coffee Glass weather, AQI and CO2 forecast widget</string>
+    <string name="compact_widget_description">Compact 4x1 weather-only widget</string>
 </resources>
