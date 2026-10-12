@@ -39,6 +39,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
 
         private fun showLoading(context: Context, manager: AppWidgetManager, id: Int) {
             val views = RemoteViews(context.packageName, R.layout.widget_skyscape)
+            applySkin(views, context)
             applySkin(context, views)
             views.setTextViewText(R.id.updated, "Updating weather…")
             applySkin(context, views)
@@ -50,6 +51,27 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.refresh, pending)
             views.setOnClickPendingIntent(R.id.widget_root, pending)
             manager.updateAppWidget(id, views)
+        }
+
+        private fun applySkin(views: RemoteViews, context: Context) {
+            val green = context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE)
+                .getString("skin", "coffee") == "glass_green"
+            val panel = if (green) R.drawable.widget_glass_background_green else R.drawable.widget_glass_background
+            val metric = if (green) R.drawable.widget_metric_background_green else R.drawable.widget_metric_background
+            views.setInt(R.id.widget_root, "setBackgroundResource", panel)
+            views.setInt(R.id.weather_metrics_row, "setBackgroundResource", metric)
+            views.setInt(R.id.air_row, "setBackgroundResource", metric)
+            val accent = if (green) android.graphics.Color.rgb(154, 255, 87) else android.graphics.Color.rgb(212, 163, 115)
+            val secondary = if (green) android.graphics.Color.rgb(168, 217, 154) else android.graphics.Color.rgb(188, 162, 140)
+            val primary = if (green) android.graphics.Color.rgb(240, 255, 232) else android.graphics.Color.rgb(232, 216, 196)
+            listOf(R.id.location, R.id.weather_icon, R.id.uv, R.id.wind, R.id.aqi).forEach {
+                views.setTextColor(it, accent)
+            }
+            listOf(R.id.updated, R.id.condition, R.id.temperature, R.id.feels_like, R.id.high_low,
+                R.id.humidity, R.id.pressure, R.id.co2, R.id.aqi_detail).forEach {
+                views.setTextColor(it, primary)
+            }
+            views.setTextColor(R.id.updated, secondary)
         }
 
         private fun fetchWeather(context: Context) {
@@ -176,6 +198,12 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                 val lows = daily.getJSONArray("temperature_2m_min")
                 for (i in 0 until minOf(7, dates.length())) {
                     val cell = RemoteViews(context.packageName, R.layout.widget_forecast_cell)
+                    val greenSkin = context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getString("skin", "coffee") == "glass_green"
+                    cell.setInt(R.id.forecast_day, "setTextColor", if (greenSkin) android.graphics.Color.rgb(240, 255, 232) else android.graphics.Color.rgb(232, 216, 196))
+                    cell.setInt(R.id.forecast_icon, "setTextColor", if (greenSkin) android.graphics.Color.rgb(154, 255, 87) else android.graphics.Color.rgb(212, 163, 115))
+                    cell.setInt(R.id.forecast_high, "setTextColor", if (greenSkin) android.graphics.Color.rgb(240, 255, 232) else android.graphics.Color.rgb(232, 216, 196))
+                    cell.setInt(R.id.forecast_low, "setTextColor", if (greenSkin) android.graphics.Color.rgb(168, 217, 154) else android.graphics.Color.rgb(188, 162, 140))
+                    cell.setInt(R.id.forecast_day, "setBackgroundResource", if (greenSkin) R.drawable.widget_metric_background_green else R.drawable.widget_metric_background)
                     if (context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getString("skin", "coffee") == "glass_green") {
                         cell.setInt(R.id.forecast_day, "setTextColor", android.graphics.Color.rgb(168, 217, 154))
                         cell.setTextColor(R.id.forecast_icon, android.graphics.Color.rgb(154, 255, 87))
