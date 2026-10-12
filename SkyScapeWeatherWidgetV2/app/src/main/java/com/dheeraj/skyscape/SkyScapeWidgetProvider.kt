@@ -160,6 +160,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.temperature, "${temp}°")
                 views.setTextViewText(R.id.condition, condition(code))
                 views.setTextViewText(R.id.weather_icon, icon(code, current.optInt("is_day", 1) == 1))
+                views.setTextViewText(R.id.weather_insight, weatherInsight(code, temp, feels))
                 views.setTextViewText(R.id.high_low, "H ${high}°  ·  L ${low}°")
                 views.setTextViewText(R.id.feels_like, "Feels ${feels}°")
                 views.setTextViewText(R.id.wind, "Wind ${current.getDouble("wind_speed_10m").roundToInt()} km/h")
@@ -220,7 +221,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             val accent = if (green) android.graphics.Color.rgb(154, 255, 87) else android.graphics.Color.rgb(212, 163, 115)
             val muted = if (green) android.graphics.Color.rgb(168, 217, 154) else android.graphics.Color.rgb(188, 162, 140)
             listOf(R.id.updated, R.id.temperature, R.id.condition, R.id.feels_like,
-                R.id.humidity, R.id.pressure, R.id.co2, R.id.aqi_detail).forEach {
+                R.id.weather_insight, R.id.humidity, R.id.pressure, R.id.co2, R.id.aqi_detail).forEach {
                 views.setTextColor(it, primary)
             }
             listOf(R.id.location, R.id.refresh, R.id.weather_icon, R.id.wind, R.id.uv, R.id.aqi).forEach {
@@ -275,6 +276,22 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             85, 86 -> "Snow showers"
             95, 96, 99 -> "Thunderstorm"
             else -> "Weather update"
+        }
+
+        private fun weatherInsight(code: Int, temperature: Int, feelsLike: Int): String {
+            return when {
+                code in 80..82 -> "Showers expected"
+                code in 51..67 || code == 85 || code == 86 -> "Rain nearby"
+                code in 95..99 -> "Thunderstorms"
+                code in 45..48 -> "Misty conditions"
+                feelsLike >= 35 -> "Feels hot today"
+                feelsLike >= 30 -> "Warm today"
+                code == 0 -> "Clear skies"
+                code == 1 -> "Mainly clear"
+                code == 2 -> "Partly cloudy"
+                code == 3 -> "Cloudy skies"
+                else -> if (temperature >= 32) "Warm outside" else "Pleasant weather"
+            }
         }
 
         private fun icon(code: Int, isDay: Boolean): String = when (code) {
