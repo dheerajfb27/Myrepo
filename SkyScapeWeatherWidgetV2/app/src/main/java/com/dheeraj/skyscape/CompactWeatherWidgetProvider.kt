@@ -62,6 +62,7 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
         views.setTextColor(R.id.compact_temp, primary)
         views.setTextColor(R.id.compact_icon, accent)
         views.setTextColor(R.id.compact_refresh, accent)
+        views.setTextColor(R.id.compact_message, accent)
     }
 
     private fun pending(context: Context, id: Int): PendingIntent {
@@ -128,6 +129,7 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
             skinViews(context, views)
             views.setTextViewText(R.id.compact_city, "⌖ $city")
             views.setTextViewText(R.id.compact_date, date + if (stale) " · cached" else "")
+            views.setTextViewText(R.id.compact_message, weatherMessage(code, temp, wind, current.optInt("is_day", 1) == 1))
             views.setTextViewText(R.id.compact_temp, "${if (temp.isNaN()) "--" else temp.roundToInt().toString()}°")
             views.setTextViewText(R.id.compact_feels, "Feels ${if (feels.isNaN()) "--" else feels.roundToInt().toString()}°")
             views.setTextViewText(R.id.compact_wind, "Wind ${if (wind.isNaN()) "--" else wind.roundToInt().toString()} km/h")
@@ -151,6 +153,17 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.compact_root, click)
             manager.updateAppWidget(id, views)
         }
+    }
+
+    private fun weatherMessage(code: Int, temp: Double, wind: Double, isDay: Boolean): String = when {
+        code in 51..67 || code in 80..82 || code in 95..99 -> "Raining nearby"
+        !isDay && !wind.isNaN() && wind >= 20 -> "Windy night"
+        !temp.isNaN() && temp >= 32 -> if (isDay) "Today is hot" else "Warm night"
+        !isDay && !temp.isNaN() && temp <= 20 -> "Cool, peaceful night"
+        code == 0 || code == 1 || code == 2 -> if (!temp.isNaN() && temp in 20.0..29.0 && (wind.isNaN() || wind < 20)) "Lovely weather" else if (isDay) "A pleasant day ahead" else "Calm night skies"
+        code == 3 || code == 45 || code == 48 -> "Cloudy skies today"
+        !wind.isNaN() && wind >= 20 -> "Breezy weather"
+        else -> "Have a lovely day"
     }
 
     private fun condition(code: Int) = when (code) {
