@@ -180,7 +180,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.temperature, "${temp}°")
                 views.setTextViewText(R.id.condition, condition(code))
                 views.setTextViewText(R.id.weather_icon, icon(code, current.optInt("is_day", 1) == 1))
-                views.setTextViewText(R.id.weather_insight, weatherInsight(code, temp, feels))
+                views.setTextViewText(R.id.weather_insight, weatherInsight(code, temp, feels, current.optDouble("wind_speed_10m", Double.NaN)))
                 views.setTextViewText(R.id.high_low, "H ${high}°  ·  L ${low}°")
                 views.setTextViewText(R.id.feels_like, "Feels ${feels}°")
                 views.setTextViewText(R.id.wind, "Wind ${current.getDouble("wind_speed_10m").roundToInt()} km/h")
@@ -302,19 +302,22 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
             else -> "Weather update"
         }
 
-        private fun weatherInsight(code: Int, temperature: Int, feelsLike: Int): String {
+        private fun weatherInsight(code: Int, temperature: Int, feelsLike: Int, windSpeed: Double): String {
             return when {
-                code in 80..82 -> "Showers expected"
-                code in 51..67 || code == 85 || code == 86 -> "Rain nearby"
-                code in 95..99 -> "Thunderstorms"
-                code in 45..48 -> "Misty conditions"
-                feelsLike >= 35 -> "Feels hot today"
-                feelsLike >= 30 -> "Warm today"
-                code == 0 -> "Clear skies"
-                code == 1 -> "Mainly clear"
-                code == 2 -> "Partly cloudy"
-                code == 3 -> "Cloudy skies"
-                else -> if (temperature >= 32) "Warm outside" else "Pleasant weather"
+                code in 95..99 -> "Thunderstorms nearby — stay safe"
+                code in 80..82 || code in 51..67 || code == 85 || code == 86 -> "Rain nearby — carry an umbrella"
+                code in 45..48 -> "Misty outside — take care"
+                feelsLike >= 38 -> "Feeling very hot — stay hydrated"
+                feelsLike >= 33 -> "Feeling hot — keep cool"
+                !windSpeed.isNaN() && windSpeed >= 25 -> "Windy weather — stay safe outdoors"
+                !windSpeed.isNaN() && windSpeed >= 15 -> "Breezy weather — enjoy the fresh air"
+                code == 0 && temperature in 18..30 -> "Clear skies — enjoy the weather!"
+                code == 0 || code == 1 -> "Lovely weather to step outside"
+                code == 2 -> "Partly cloudy — have a lovely day"
+                code == 3 -> "Cloudy skies — enjoy the cool weather"
+                temperature >= 32 -> "Warm outside — stay hydrated"
+                temperature <= 18 -> "Cool weather — enjoy the fresh air"
+                else -> "Pleasant weather — have a great day!"
             }
         }
 
