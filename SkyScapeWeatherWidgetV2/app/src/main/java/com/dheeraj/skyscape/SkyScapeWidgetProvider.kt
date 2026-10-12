@@ -203,7 +203,7 @@ class SkyScapeWidgetProvider : AppWidgetProvider() {
                     cell.setInt(R.id.forecast_icon, "setTextColor", if (greenSkin) android.graphics.Color.rgb(154, 255, 87) else android.graphics.Color.rgb(212, 163, 115))
                     cell.setInt(R.id.forecast_high, "setTextColor", if (greenSkin) android.graphics.Color.rgb(240, 255, 232) else android.graphics.Color.rgb(232, 216, 196))
                     cell.setInt(R.id.forecast_low, "setTextColor", if (greenSkin) android.graphics.Color.rgb(168, 217, 154) else android.graphics.Color.rgb(188, 162, 140))
-                    cell.setInt(R.id.forecast_day, "setBackgroundResource", if (greenSkin) R.drawable.widget_metric_background_green else R.drawable.widget_metric_background)
+                    cell.setInt(R.id.forecast_cell_root, "setBackgroundResource", if (greenSkin) R.drawable.widget_metric_background_green else R.drawable.widget_metric_background)
                     if (context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE).getString("skin", "coffee") == "glass_green") {
                         cell.setInt(R.id.forecast_day, "setTextColor", android.graphics.Color.rgb(168, 217, 154))
                         cell.setTextColor(R.id.forecast_icon, android.graphics.Color.rgb(154, 255, 87))
