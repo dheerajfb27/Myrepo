@@ -31,6 +31,17 @@
                 android:text="Checking weather…"
                 android:textColor="#FFE8D8C4"
                 android:textSize="10sp" />
+            <TextView
+                android:id="@+id/weather_insight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Lovely weather"
+                android:textColor="#FFBCA28C"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
         </LinearLayout>
         <TextView
             android:id="@+id/refresh"
@@ -62,16 +73,6 @@
                 android:text="☀"
                 android:textColor="#FFD4A373"
                 android:textSize="39sp" />
-            <TextView
-                android:id="@+id/weather_insight"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Mainly clear"
-                android:textColor="#FFBCA28C"
-                android:textSize="8sp"
-                android:maxLines="2"
-                android:ellipsize="end" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
