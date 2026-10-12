@@ -42,6 +42,11 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
         val skin = when (skinName) {
             "glass_green" -> CompactSkin(R.drawable.widget_glass_green_background,
                 Color.rgb(240,255,232), Color.rgb(154,255,87), Color.rgb(168,217,154))
+            "solid_orange" -> CompactSkin(0, Color.WHITE, Color.rgb(255,218,170), Color.rgb(255,235,210), Color.rgb(255,140,0))
+            "teal_blue" -> CompactSkin(0, Color.WHITE, Color.rgb(134,244,239), Color.rgb(205,250,246), Color.rgb(0,140,149))
+            "magenta" -> CompactSkin(0, Color.WHITE, Color.rgb(255,190,232), Color.rgb(255,225,245), Color.rgb(194,24,139))
+            "vine_red" -> CompactSkin(0, Color.WHITE, Color.rgb(255,190,202), Color.rgb(255,220,226), Color.rgb(123,24,53))
+            "solid_purple" -> CompactSkin(0, Color.WHITE, Color.rgb(220,185,255), Color.rgb(240,220,255), Color.rgb(112,39,168))
             "amoled" -> CompactSkin(R.drawable.widget_glass_amoled,
                 Color.rgb(239,246,255), Color.rgb(53,230,255), Color.rgb(156,180,207))
             "arctic" -> CompactSkin(R.drawable.widget_glass_arctic,
@@ -53,7 +58,7 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
             else -> CompactSkin(R.drawable.widget_glass_background,
                 Color.rgb(232,216,196), Color.rgb(212,163,115), Color.rgb(188,162,140))
         }
-        views.setInt(R.id.compact_root, "setBackgroundResource", skin.background)
+        if (skin.solidColor != null) views.setInt(R.id.compact_root, "setBackgroundColor", skin.solidColor) else views.setInt(R.id.compact_root, "setBackgroundResource", skin.background)
         views.setTextColor(R.id.compact_city, skin.accent)
         views.setTextColor(R.id.compact_temp, skin.primary)
         views.setTextColor(R.id.compact_icon, skin.accent)
@@ -69,7 +74,8 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
         val background: Int,
         val primary: Int,
         val accent: Int,
-        val muted: Int
+        val muted: Int,
+        val solidColor: Int? = null
     )
 
     private fun pending(context: Context, id: Int): PendingIntent {
