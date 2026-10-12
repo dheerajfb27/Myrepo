@@ -36,34 +36,41 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
         manager.getAppWidgetIds(ComponentName(context, javaClass))
 
     private fun skinViews(context: Context, views: RemoteViews) {
-        val parrot = greenGlow && this !is GlassGreenMiniWidgetProvider
-        val bg = when {
-            parrot -> R.drawable.widget_glass_green_background
-            greenGlow -> R.drawable.widget_glass_soft_green_background
-            else -> R.drawable.widget_glass_background
+        // The 4x1 widgets use the same saved skin selection as the full-size widget.
+        val skinName = context.getSharedPreferences("weather_cache", Context.MODE_PRIVATE)
+            .getString("skin", "coffee")
+        val skin = when (skinName) {
+            "glass_green" -> CompactSkin(R.drawable.widget_glass_green_background,
+                Color.rgb(240,255,232), Color.rgb(154,255,87), Color.rgb(168,217,154))
+            "amoled" -> CompactSkin(R.drawable.widget_glass_amoled,
+                Color.rgb(239,246,255), Color.rgb(53,230,255), Color.rgb(156,180,207))
+            "arctic" -> CompactSkin(R.drawable.widget_glass_arctic,
+                Color.rgb(231,249,255), Color.rgb(139,233,255), Color.rgb(164,207,224))
+            "sunset" -> CompactSkin(R.drawable.widget_glass_sunset,
+                Color.rgb(255,239,230), Color.rgb(255,155,113), Color.rgb(232,177,190))
+            "rose" -> CompactSkin(R.drawable.widget_glass_rose,
+                Color.rgb(255,239,249), Color.rgb(255,139,203), Color.rgb(224,174,207))
+            else -> CompactSkin(R.drawable.widget_glass_background,
+                Color.rgb(232,216,196), Color.rgb(212,163,115), Color.rgb(188,162,140))
         }
-        views.setInt(R.id.compact_root, "setBackgroundResource", bg)
-        val primary = when {
-            parrot -> Color.rgb(240,255,232)
-            greenGlow -> Color.rgb(232,248,230)
-            else -> Color.rgb(232,216,196)
-        }
-        val accent = when {
-            parrot -> Color.rgb(154,255,87)
-            greenGlow -> Color.rgb(135,201,139)
-            else -> Color.rgb(212,163,115)
-        }
-        val muted = when {
-            parrot -> Color.rgb(168,217,154)
-            greenGlow -> Color.rgb(165,201,165)
-            else -> Color.rgb(188,162,140)
-        }
-        views.setTextColor(R.id.compact_city, accent)
-        views.setTextColor(R.id.compact_temp, primary)
-        views.setTextColor(R.id.compact_icon, accent)
-        views.setTextColor(R.id.compact_refresh, accent)
-        views.setTextColor(R.id.compact_message, accent)
+        views.setInt(R.id.compact_root, "setBackgroundResource", skin.background)
+        views.setTextColor(R.id.compact_city, skin.accent)
+        views.setTextColor(R.id.compact_temp, skin.primary)
+        views.setTextColor(R.id.compact_icon, skin.accent)
+        views.setTextColor(R.id.compact_refresh, skin.accent)
+        views.setTextColor(R.id.compact_message, skin.accent)
+        views.setTextColor(R.id.compact_date, skin.muted)
+        views.setTextColor(R.id.compact_feels, skin.primary)
+        views.setTextColor(R.id.compact_wind, skin.accent)
+        views.setTextColor(R.id.compact_high_low, skin.muted)
     }
+
+    private data class CompactSkin(
+        val background: Int,
+        val primary: Int,
+        val accent: Int,
+        val muted: Int
+    )
 
     private fun pending(context: Context, id: Int): PendingIntent {
         val intent = Intent(context, javaClass).setAction(ACTION_REFRESH)
