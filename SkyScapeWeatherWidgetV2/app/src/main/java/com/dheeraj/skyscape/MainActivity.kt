@@ -21,16 +21,19 @@ class MainActivity : Activity() {
         doubleArrayOf(9.9312,76.2673), doubleArrayOf(8.5241,76.9366), doubleArrayOf(21.1702,72.8311),
         doubleArrayOf(21.1458,79.0882), doubleArrayOf(25.3176,82.9739)
     )
-    private val skinNames = arrayOf("Coffee Glass", "Glass Green")
-    private val skinValues = arrayOf("coffee", "glass_green")
+    private val skinNames = arrayOf("Coffee Glass", "Glass Green", "AMOLED Neon", "Arctic Blue", "Sunset Glow", "Rose Quartz")
+    private val skinValues = arrayOf("coffee", "glass_green", "amoled", "arctic", "sunset", "rose")
+    private val backgrounds = intArrayOf(Color.rgb(42,31,26), Color.rgb(7,29,19), Color.rgb(5,5,12), Color.rgb(15,42,58), Color.rgb(54,21,48), Color.rgb(49,27,43))
+    private val accents = intArrayOf(Color.rgb(212,163,115), Color.rgb(154,255,87), Color.rgb(53,230,255), Color.rgb(139,233,255), Color.rgb(255,155,113), Color.rgb(255,139,203))
+    private val texts = intArrayOf(Color.rgb(232,216,196), Color.rgb(240,255,232), Color.rgb(239,246,255), Color.rgb(231,249,255), Color.rgb(255,239,230), Color.rgb(255,239,249))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val prefs = getSharedPreferences("weather_cache", MODE_PRIVATE)
-        val green = prefs.getString("skin", "coffee") == "glass_green"
-        val bg = if (green) Color.rgb(7, 29, 19) else Color.rgb(42, 31, 26)
-        val accent = if (green) Color.rgb(154, 255, 87) else Color.rgb(212, 163, 115)
-        val text = if (green) Color.rgb(240, 255, 232) else Color.rgb(232, 216, 196)
+        val currentSkin = skinValues.indexOf(prefs.getString("skin", "coffee")).coerceAtLeast(0)
+        val bg = backgrounds[currentSkin]
+        val accent = accents[currentSkin]
+        val text = texts[currentSkin]
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_VERTICAL
@@ -44,7 +47,7 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
         })
         root.addView(TextView(this).apply {
-            this.text = "Choose your glass skin and Indian city"
+            this.text = "Choose a glass skin and Indian city"
             textSize = 15f
             setTextColor(accent)
             gravity = Gravity.CENTER
@@ -57,7 +60,7 @@ class MainActivity : Activity() {
         })
         val skinSpinner = Spinner(this)
         skinSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, skinNames)
-        skinSpinner.setSelection(skinValues.indexOf(prefs.getString("skin", "coffee")).coerceAtLeast(0))
+        skinSpinner.setSelection(currentSkin)
         root.addView(skinSpinner)
 
         root.addView(TextView(this).apply {
@@ -94,7 +97,7 @@ class MainActivity : Activity() {
             save.text = "SAVED • WIDGET REFRESHING"
         }
         root.addView(TextView(this).apply {
-            this.text = "Glass Green uses a deep emerald glass panel with parrot-green accents. AQI uses the US AQI scale (not India's CPCB scale). CO₂ is a modelled outdoor estimate. Add or resize the widget from your home screen: long-press → Widgets → SkyScape Weather."
+            this.text = "Glass Green is the signature emerald look. AMOLED Neon, Arctic Blue, Sunset Glow and Rose Quartz are extra themes. AQI currently uses the US AQI scale (not India's CPCB scale); CO₂ is a modelled outdoor estimate. Add or resize the widget from your home screen: long-press → Widgets → SkyScape Weather."
             textSize = 13f
             setTextColor(text)
             setPadding(0, 24, 0, 0)
