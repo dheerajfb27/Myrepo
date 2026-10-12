@@ -36,11 +36,28 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
         manager.getAppWidgetIds(ComponentName(context, javaClass))
 
     private fun skinViews(context: Context, views: RemoteViews) {
-        val bg = if (greenGlow) R.drawable.widget_glass_green_background else R.drawable.widget_glass_background
+        val parrot = greenGlow && this !is GlassGreenMiniWidgetProvider
+        val bg = when {
+            parrot -> R.drawable.widget_glass_green_background
+            greenGlow -> R.drawable.widget_glass_soft_green_background
+            else -> R.drawable.widget_glass_background
+        }
         views.setInt(R.id.compact_root, "setBackgroundResource", bg)
-        val primary = if (greenGlow) Color.rgb(240,255,232) else Color.rgb(232,216,196)
-        val accent = if (greenGlow) Color.rgb(154,255,87) else Color.rgb(212,163,115)
-        val muted = if (greenGlow) Color.rgb(168,217,154) else Color.rgb(188,162,140)
+        val primary = when {
+            parrot -> Color.rgb(240,255,232)
+            greenGlow -> Color.rgb(232,248,230)
+            else -> Color.rgb(232,216,196)
+        }
+        val accent = when {
+            parrot -> Color.rgb(154,255,87)
+            greenGlow -> Color.rgb(135,201,139)
+            else -> Color.rgb(212,163,115)
+        }
+        val muted = when {
+            parrot -> Color.rgb(168,217,154)
+            greenGlow -> Color.rgb(165,201,165)
+            else -> Color.rgb(188,162,140)
+        }
         views.setTextColor(R.id.compact_city, accent)
         views.setTextColor(R.id.compact_temp, primary)
         views.setTextColor(R.id.compact_condition, primary)
