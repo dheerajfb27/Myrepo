@@ -21,11 +21,11 @@ class MainActivity : Activity() {
         doubleArrayOf(9.9312,76.2673), doubleArrayOf(8.5241,76.9366), doubleArrayOf(21.1702,72.8311),
         doubleArrayOf(21.1458,79.0882), doubleArrayOf(25.3176,82.9739)
     )
-    private val skinNames = arrayOf("Coffee Glass", "Glass Green", "AMOLED Neon", "Arctic Blue", "Sunset Glow", "Rose Quartz")
-    private val skinValues = arrayOf("coffee", "glass_green", "amoled", "arctic", "sunset", "rose")
-    private val backgrounds = intArrayOf(Color.rgb(42,31,26), Color.rgb(7,29,19), Color.rgb(5,5,12), Color.rgb(15,42,58), Color.rgb(54,21,48), Color.rgb(49,27,43))
-    private val accents = intArrayOf(Color.rgb(212,163,115), Color.rgb(154,255,87), Color.rgb(53,230,255), Color.rgb(139,233,255), Color.rgb(255,155,113), Color.rgb(255,139,203))
-    private val texts = intArrayOf(Color.rgb(232,216,196), Color.rgb(240,255,232), Color.rgb(239,246,255), Color.rgb(231,249,255), Color.rgb(255,239,230), Color.rgb(255,239,249))
+    private val skinNames = arrayOf("Coffee Glass", "Glass Green", "AMOLED Neon", "Arctic Blue", "Sunset Glow", "Rose Quartz", "Solid Orange", "Teal Blue", "Magenta", "Vine Red", "Solid Purple")
+    private val skinValues = arrayOf("coffee", "glass_green", "amoled", "arctic", "sunset", "rose", "solid_orange", "teal_blue", "magenta", "vine_red", "solid_purple")
+    private val backgrounds = intArrayOf(Color.rgb(42,31,26), Color.rgb(7,29,19), Color.rgb(5,5,12), Color.rgb(15,42,58), Color.rgb(54,21,48), Color.rgb(49,27,43), Color.rgb(255,140,0), Color.rgb(0,140,149), Color.rgb(194,24,139), Color.rgb(123,24,53), Color.rgb(112,39,168))
+    private val accents = intArrayOf(Color.rgb(212,163,115), Color.rgb(154,255,87), Color.rgb(53,230,255), Color.rgb(139,233,255), Color.rgb(255,155,113), Color.rgb(255,139,203), Color.rgb(255,218,170), Color.rgb(134,244,239), Color.rgb(255,190,232), Color.rgb(255,190,202), Color.rgb(220,185,255))
+    private val texts = intArrayOf(Color.rgb(232,216,196), Color.rgb(240,255,232), Color.rgb(239,246,255), Color.rgb(231,249,255), Color.rgb(255,239,230), Color.rgb(255,239,249), Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE)
 
     private fun themedSpinnerAdapter(items: Array<String>, primary: Int, accent: Int): ArrayAdapter<String> {
         return object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
@@ -67,7 +67,7 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
         })
         root.addView(TextView(this).apply {
-            this.text = "Choose a glass skin and Indian city"
+            this.text = "Choose a weather skin and Indian city"
             textSize = 15f
             setTextColor(accent)
             gravity = Gravity.CENTER
