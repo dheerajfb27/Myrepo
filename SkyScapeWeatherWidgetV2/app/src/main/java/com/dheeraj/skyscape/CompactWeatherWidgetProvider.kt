@@ -60,8 +60,6 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
         }
         views.setTextColor(R.id.compact_city, accent)
         views.setTextColor(R.id.compact_temp, primary)
-        views.setTextColor(R.id.compact_condition, primary)
-        views.setTextColor(R.id.compact_high_low, muted)
         views.setTextColor(R.id.compact_icon, accent)
         views.setTextColor(R.id.compact_refresh, accent)
     }
@@ -76,7 +74,6 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.widget_weather_compact)
         skinViews(context, views)
         views.setTextViewText(R.id.compact_city, widgetTitle)
-        views.setTextViewText(R.id.compact_condition, "Updating weather…")
         val click = pending(context, id)
         views.setOnClickPendingIntent(R.id.compact_refresh, click)
         views.setOnClickPendingIntent(R.id.compact_root, click)
@@ -124,9 +121,6 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.compact_city, "⌖ $city")
             views.setTextViewText(R.id.compact_temp, "${current.optDouble("temperature_2m", Double.NaN).let { if (it.isNaN()) "--" else it.roundToInt().toString() }}°")
             views.setTextViewText(R.id.compact_icon, weatherIcon(code, current.optInt("is_day", 1) == 1))
-            views.setTextViewText(R.id.compact_condition, condition(code) + if (stale) " · cached" else "")
-            views.setTextViewText(R.id.compact_high_low,
-                "H ${daily.getJSONArray("temperature_2m_max").optDouble(0).roundToInt()}°  ·  L ${daily.getJSONArray("temperature_2m_min").optDouble(0).roundToInt()}°")
             val click = pending(context, id)
             views.setOnClickPendingIntent(R.id.compact_refresh, click)
             views.setOnClickPendingIntent(R.id.compact_root, click)
@@ -140,7 +134,6 @@ open class CompactWeatherWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_weather_compact)
             skinViews(context, views)
             views.setTextViewText(R.id.compact_city, widgetTitle)
-            views.setTextViewText(R.id.compact_condition, "Weather unavailable · tap refresh")
             val click = pending(context, id)
             views.setOnClickPendingIntent(R.id.compact_refresh, click)
             views.setOnClickPendingIntent(R.id.compact_root, click)
