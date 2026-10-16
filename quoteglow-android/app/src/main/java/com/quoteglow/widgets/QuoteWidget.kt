@@ -22,29 +22,23 @@ import androidx.glance.unit.ColorProvider
 object QuoteWidgetPrefs {
     private const val PREFS = "quoteglow_widget_prefs"
     private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-
-    fun save(context: Context, id: Int, quote: String, style: String, opacity: Int) {
-        prefs(context).edit()
-            .putString("quote_$id", quote)
-            .putString("style_$id", style)
-            .putInt("opacity_$id", opacity.coerceIn(10, 100))
-            .apply()
-    }
-
-    fun saveDefault(context: Context, style: String, opacity: Int) {
-        prefs(context).edit().putString("default_style", style).putInt("default_opacity", opacity.coerceIn(10, 100)).apply()
-    }
-
+    fun save(context: Context, id: Int, quote: String, style: String, opacity: Int) = prefs(context).edit()
+        .putString("quote_$id", quote).putString("style_$id", style)
+        .putInt("opacity_$id", opacity.coerceIn(10, 100)).apply()
+    fun saveDefault(context: Context, style: String, opacity: Int) = prefs(context).edit()
+        .putString("default_style", style).putInt("default_opacity", opacity.coerceIn(10, 100)).apply()
     fun quote(context: Context, id: Int) = prefs(context).getString("quote_$id", null)
         ?: "Small steps every day lead to big results."
-
     fun style(context: Context, id: Int) = prefs(context).getString("style_$id", null)
         ?: prefs(context).getString("default_style", "Glass") ?: "Glass"
-
     fun opacity(context: Context, id: Int) = prefs(context).getInt("opacity_$id", prefs(context).getInt("default_opacity", 90)).coerceIn(10, 100)
 }
 
-private fun argb(opacity: Int, rgb: Long): Color = Color((opacity * 255 / 100 shl 24) or rgb)
+private fun argb(opacity: Int, rgb: Long): Color {
+    val a = (opacity.coerceIn(0, 100) * 255 / 100).toLong()
+    val value = (a shl 24) or (rgb and 0x00FFFFFF)
+    return Color(value.toULong().toLong())
+}
 
 private fun widgetBackground(style: String, opacity: Int): Color = when (style) {
     "Neon" -> argb(opacity, 0x00240038)
@@ -66,13 +60,12 @@ class QuoteWidget : GlanceAppWidget() {
             val quote = QuoteWidgetPrefs.quote(context, appWidgetId)
             val style = QuoteWidgetPrefs.style(context, appWidgetId)
             val opacity = QuoteWidgetPrefs.opacity(context, appWidgetId)
-            val bg = widgetBackground(style, opacity)
-            val textColor = if (style == "Handwritten") Color(0xFFFFE7C2) else Color.White
             Box(
-                GlanceModifier.fillMaxSize().background(ColorProvider(bg)).cornerRadius(18.dp).padding(12.dp),
+                GlanceModifier.fillMaxSize().background(ColorProvider(widgetBackground(style, opacity))).cornerRadius(18.dp).padding(12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val textColor = if (style == "Handwritten") Color(0xFFFFE7C2) else Color.White
                     Text("❝  $quote  ❞", style = TextStyle(color = ColorProvider(textColor)))
                     if (style == "Neon") Text("✦ QUOTE GLOW ✦", style = TextStyle(color = ColorProvider(Color(0xFFFF4FD8))))
                     if (style == "Elegant") Text("— QuoteGlow", style = TextStyle(color = ColorProvider(Color(0xFFD6C7FF))))
@@ -82,10 +75,5 @@ class QuoteWidget : GlanceAppWidget() {
     }
 }
 
-class QuoteWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget = QuoteWidget()
-}
-
-class QuoteWidget4x1Receiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget = QuoteWidget()
-}
+class QuoteWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget = QuoteWidget() }
+class QuoteWidget4x1Receiver : GlanceAppWidgetReceiver() { override val glanceAppWidget = QuoteWidget() }
