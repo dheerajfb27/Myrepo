@@ -2,10 +2,12 @@ package com.quoteglow.widgets
 
 import android.content.Context
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -16,8 +18,6 @@ import androidx.glance.layout.padding
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.glance.appwidget.cornerRadius
-import androidx.glance.color.ColorProvider
 
 object QuoteWidgetPrefs {
     private const val PREFS = "quoteglow_widget_prefs"
@@ -37,8 +37,10 @@ object QuoteWidgetPrefs {
 
     fun quote(context: Context, id: Int) = prefs(context).getString("quote_$id", null)
         ?: "Small steps every day lead to big results."
+
     fun style(context: Context, id: Int) = prefs(context).getString("style_$id", null)
         ?: prefs(context).getString("default_style", "Glass") ?: "Glass"
+
     fun opacity(context: Context, id: Int) = prefs(context).getInt("opacity_$id", prefs(context).getInt("default_opacity", 90)).coerceIn(10, 100)
 }
 
@@ -57,8 +59,6 @@ private fun widgetBackground(style: String, opacity: Int): Color = when (style) 
     else -> argb(opacity, 0x00182036)
 }
 
-private suspend fun provideQuote(context: Context, id: GlanceId) = Unit
-
 class QuoteWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
@@ -73,10 +73,7 @@ class QuoteWidget : GlanceAppWidget() {
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "❝  $quote  ❞",
-                        style = TextStyle(color = ColorProvider(textColor))
-                    )
+                    Text("❝  $quote  ❞", style = TextStyle(color = ColorProvider(textColor)))
                     if (style == "Neon") Text("✦ QUOTE GLOW ✦", style = TextStyle(color = ColorProvider(Color(0xFFFF4FD8))))
                     if (style == "Elegant") Text("— QuoteGlow", style = TextStyle(color = ColorProvider(Color(0xFFD6C7FF))))
                 }
