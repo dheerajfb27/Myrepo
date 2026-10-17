@@ -1,85 +1,91 @@
 package com.quoteglow.widgets
 
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
-import androidx.glance.GlanceId
-import androidx.glance.GlanceModifier
-import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.provideContent
-import androidx.glance.background
-import androidx.glance.layout.Alignment
-import androidx.glance.layout.Box
-import androidx.glance.layout.Column
-import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.padding
-import androidx.glance.text.Text
-import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
-import androidx.glance.unit.sp
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Shader
+import android.graphics.Typeface
+import android.os.Bundle
+import android.widget.RemoteViews
+import kotlin.math.max
 
 object QuoteGlowStore {
     private const val FILE = "quoteglow"
-    fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
-    fun quote(context: Context, id: Int) = prefs(context).getString("quote_$id", "Dream it. Build it. Live it.") ?: "Dream it. Build it. Live it."
-    fun style(context: Context, id: Int) = prefs(context).getString("style_$id", "Glass") ?: "Glass"
-    fun opacity(context: Context, id: Int) = prefs(context).getInt("opacity_$id", 90).coerceIn(10, 100)
-    fun textOpacity(context: Context, id: Int) = prefs(context).getInt("text_opacity_$id", 100).coerceIn(10, 100)
-    fun textSize(context: Context, id: Int) = prefs(context).getInt("text_size_$id", 18).coerceIn(10, 34)
-    fun colorMode(context: Context, id: Int) = prefs(context).getString("color_mode_$id", "White") ?: "White"
-    fun save(context: Context, id: Int, quote: String, style: String, opacity: Int, textOpacity: Int, textSize: Int, colorMode: String) {
-        prefs(context).edit().putString("quote_$id", quote).putString("style_$id", style)
-            .putInt("opacity_$id", opacity.coerceIn(10, 100)).putInt("text_opacity_$id", textOpacity.coerceIn(10, 100))
-            .putInt("text_size_$id", textSize.coerceIn(10, 34)).putString("color_mode_$id", colorMode).apply()
+    private fun p(c: Context) = c.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+    fun quote(c: Context, id: Int) = p(c).getString("quote_$id", "Dream it. Build it. Live it.") ?: "Dream it. Build it. Live it."
+    fun author(c: Context, id: Int) = p(c).getString("author_$id", "") ?: ""
+    fun font(c: Context, id: Int) = p(c).getString("font_$id", "Sans") ?: "Sans"
+    fun mode(c: Context, id: Int) = p(c).getString("mode_$id", "Rainbow") ?: "Rainbow"
+    fun textOpacity(c: Context, id: Int) = p(c).getInt("textOpacity_$id", 100).coerceIn(10,100)
+    fun bgOpacity(c: Context, id: Int) = p(c).getInt("bgOpacity_$id", 75).coerceIn(0,100)
+    fun textSize(c: Context, id: Int) = p(c).getInt("textSize_$id", 20).coerceIn(12,36)
+    fun bgStyle(c: Context, id: Int) = p(c).getString("bgStyle_$id", "Glass") ?: "Glass"
+}
+
+private fun typeface(name: String): Typeface = when (name) {
+    "Serif" -> Typeface.create("serif", Typeface.NORMAL)
+    "Elegant" -> Typeface.create("serif", Typeface.ITALIC)
+    "Mono" -> Typeface.create("monospace", Typeface.BOLD)
+    "Handwritten" -> Typeface.create("cursive", Typeface.NORMAL)
+    "Bold" -> Typeface.create("sans-serif", Typeface.BOLD)
+    else -> Typeface.create("sans-serif", Typeface.NORMAL)
+}
+
+private fun colors(mode: String): IntArray = when(mode) {
+    "Rainbow" -> intArrayOf(0xFFFF3B30.toInt(),0xFFFFCC00.toInt(),0xFF34C759.toInt(),0xFF00C7BE.toInt(),0xFF5856D6.toInt(),0xFFFF2D55.toInt())
+    "Ocean" -> intArrayOf(0xFF00D4FF.toInt(),0xFF4776E6.toInt())
+    "Sunset" -> intArrayOf(0xFFFF512F.toInt(),0xFFF09819.toInt())
+    "Purple" -> intArrayOf(0xFF8E2DE2.toInt(),0xFFDA22FF.toInt())
+    "Mint" -> intArrayOf(0xFF00F5A0.toInt(),0xFF00D9F5.toInt())
+    "Gold" -> intArrayOf(0xFFFFD166.toInt(),0xFFFF8C42.toInt())
+    else -> intArrayOf(Color.WHITE)
+}
+
+private fun background(style: String): Int = when(style) {
+    "Neon" -> 0xFF250033.toInt(); "Gradient" -> 0xFF162B45.toInt(); "AMOLED" -> Color.BLACK
+    "Elegant" -> 0xFF272033.toInt(); "Handwritten" -> 0xFF342A23.toInt(); "Bold" -> 0xFF18212D.toInt()
+    "Retro" -> 0xFF443022.toInt(); "Transparent" -> 0xFF111827.toInt(); else -> 0xFF20283A.toInt()
+}
+
+object QuoteGlowRenderer {
+    fun render(context: Context, id: Int, width: Int, height: Int): Bitmap {
+        val w = max(width, 180); val h = max(height, 70)
+        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val alpha = QuoteGlowStore.bgOpacity(context,id) * 255 / 100
+        val card = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = (alpha shl 24) or (background(QuoteGlowStore.bgStyle(context,id)) and 0x00FFFFFF) }
+        canvas.drawRoundRect(RectF(2f,2f,w-2f,h-2f), 28f,28f,card)
+        val quote = QuoteGlowStore.quote(context,id); val author = QuoteGlowStore.author(context,id)
+        val size = QuoteGlowStore.textSize(context,id) * context.resources.displayMetrics.scaledDensity
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface=typeface(QuoteGlowStore.font(context,id)); textSize=size; textAlign=Paint.Align.CENTER }
+        val cs=colors(QuoteGlowStore.mode(context,id)); paint.shader=if(cs.size>1) LinearGradient(0f,0f,w.toFloat(),0f,cs,null,Shader.TileMode.CLAMP) else null
+        if(cs.size==1) paint.color=(QuoteGlowStore.textOpacity(context,id)*255/100 shl 24) or (cs[0] and 0x00FFFFFF)
+        val maxWidth=w*.88f; val lines=mutableListOf<String>(); var line=""
+        for(word in quote.split(" ")) { val t=if(line.isEmpty())word else "$line $word"; if(paint.measureText(t)<=maxWidth) line=t else { if(line.isNotEmpty())lines.add(line); line=word } }
+        if(line.isNotEmpty())lines.add(line)
+        val lh=size*1.18f; val total=lines.size*lh+if(author.isBlank())0f:size*.8f; var y=(h-total)/2f+size
+        lines.forEach { canvas.drawText("❝ $it ❞",w/2f,y,paint); y+=lh }
+        if(author.isNotBlank()) { paint.shader=null; paint.color=(QuoteGlowStore.textOpacity(context,id)*255/100 shl 24) or 0x00DDDDDD; paint.textSize=size*.58f; canvas.drawText("— $author",w/2f,y,w/2f.let{paint}) }
+        return bitmap
     }
 }
 
-private fun bg(style: String, opacity: Int): Int {
-    val alpha = (opacity * 255 / 100) shl 24
-    val rgb = when (style) {
-        "Neon" -> 0x002A003F; "Gradient" -> 0x001B4260; "AMOLED" -> 0x00000000; "Elegant" -> 0x002D2440
-        "Handwritten" -> 0x003D3024; "Bold" -> 0x001B2432; "Retro" -> 0x00453525; "Transparent" -> 0x00111827
-        "Minimal" -> 0x00212631; else -> 0x00182036
-    }
-    return alpha or rgb
-}
-
-private fun textColor(mode: String, opacity: Int): Int {
-    val a = (opacity * 255 / 100) shl 24
-    val rgb = when (mode) {
-        "Sunset" -> 0xFFFF6B35; "Ocean" -> 0xFF35C9FF; "Purple" -> 0xFFB66DFF; "Mint" -> 0xFF56F2B3
-        "Gold" -> 0xFFFFD166; "Pink" -> 0xFFFF5CAD; else -> Color.WHITE
-    }
-    return a or rgb
-}
-
-private fun secondaryColor(mode: String): Int = when (mode) {
-    "Sunset" -> 0xFFFFD166; "Ocean" -> 0xFF8A7CFF; "Purple" -> 0xFFFF6FD8; "Mint" -> 0xFF6CCBFF
-    "Gold" -> 0xFFFF8A3D; "Pink" -> 0xFF8A7CFF; else -> Color.LTGRAY
-}
-
-class QuoteWidget : GlanceAppWidget() {
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
-        provideContent {
-            val numericId = id.toString().filter(Char::isDigit).toIntOrNull() ?: 0
-            val style = QuoteGlowStore.style(context, numericId)
-            val opacity = QuoteGlowStore.opacity(context, numericId)
-            val quote = QuoteGlowStore.quote(context, numericId)
-            val textOpacity = QuoteGlowStore.textOpacity(context, numericId)
-            val textSize = QuoteGlowStore.textSize(context, numericId)
-            val mode = QuoteGlowStore.colorMode(context, numericId)
-            val primary = textColor(mode, textOpacity)
-            Box(GlanceModifier.fillMaxSize().background(ColorProvider(bg(style, opacity))).cornerRadius(18.dp).padding(12.dp), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("❝ $quote ❞", style = TextStyle(color = ColorProvider(primary), fontSize = textSize.sp))
-                    if (mode != "White") Text("✦ ${mode.uppercase()} ✦", style = TextStyle(color = ColorProvider(secondaryColor(mode)), fontSize = 9.sp))
-                    else if (style == "Elegant") Text("— QuoteGlow", style = TextStyle(color = ColorProvider(Color.LTGRAY), fontSize = 9.sp))
-                }
-            }
+class QuoteWidgetReceiver : AppWidgetProvider() {
+    override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) { ids.forEach { update(context,manager,it) } }
+    override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, newOptions: Bundle) { update(context,manager,id) }
+    companion object {
+        fun update(context: Context, manager: AppWidgetManager, id: Int) {
+            val o=manager.getAppWidgetOptions(id); val d=context.resources.displayMetrics.density
+            val width=(o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH,320)*d).toInt(); val height=(o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT,80)*d).toInt()
+            val views=RemoteViews(context.packageName,R.layout.quote_widget)
+            views.setImageViewBitmap(R.id.quote_image,QuoteGlowRenderer.render(context,id,width,height)); manager.updateAppWidget(id,views)
         }
     }
 }
-
-class QuoteWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget = QuoteWidget() }
-class QuoteWidget4x1Receiver : GlanceAppWidgetReceiver() { override val glanceAppWidget = QuoteWidget() }
+class QuoteWidget4x1Receiver : QuoteWidgetReceiver()
