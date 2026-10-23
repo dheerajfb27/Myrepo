@@ -18,9 +18,10 @@ jobs:
         with:
           gradle-version: '8.14.6'
       - name: Build debug APK
+        working-directory: DailyTaskWidget
         run: gradle assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: daily-tasks-widget-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: DailyTaskWidget/app/build/outputs/apk/debug/app-debug.apk
